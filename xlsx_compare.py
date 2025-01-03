@@ -1,5 +1,6 @@
 ﻿# first install dependencies:
 # pip install pandas openpyxl
+# v0.1.0
 
 import sys
 
@@ -61,6 +62,8 @@ def compare_dataframes_cell_by_cell(df1, df2):
     diff = pd.DataFrame(index=range(max_rows), columns=range(max_cols))
     # print("diff DataFrame created")
 
+    diff_count = 0
+
     for i in range(max_rows):
         for j in range(max_cols):
             value1 = df1.iloc[i, j]
@@ -72,6 +75,11 @@ def compare_dataframes_cell_by_cell(df1, df2):
             if value1 != value2:
                 # print(f"Difference: ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
                 diff.iloc[i, j] = f"{value1} -> {value2}"
+                diff_count = diff_count + 1
+    if diff_count > 0:
+        print(f"{Colors.RED}{diff_count} difference{Colors.RESET}")
+        # TODO Add a function to save the differences to an Excel file
+
     return diff
 
 

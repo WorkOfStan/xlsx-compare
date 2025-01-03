@@ -15,6 +15,7 @@
 
    - Highlights cell-by-cell differences for sheets present in both files.
    - Writes differences into a separate sheet named `df-<sheet_name>`.
+   - CLI output contains difference count (in red).
 
 3. **Generates a Summary Sheet**:
 
