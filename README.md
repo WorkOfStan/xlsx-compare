@@ -30,7 +30,7 @@
 
 6. **User-Friendly CLI**:
     - Accepts file paths as parameters.
-    - Optionally, allows specifying the output file name.
+    - Optionally, allows specifying the output filename.
 
 ---
 
