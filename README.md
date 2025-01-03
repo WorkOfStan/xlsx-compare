@@ -1,4 +1,4 @@
-# xlsx-compare
+# xlsx_compare
 
 `XLSX Compare` is a Python script that compares two Excel files, sheet by sheet, and identifies differences. This tool is particularly useful for quickly comparing large Excel files and generating an organized output of the differences.
 
@@ -34,6 +34,7 @@
    - Handles different sheet sizes by padding smaller sheets to match dimensions.
 
 6. **User-Friendly CLI**:
+
    - Accepts file paths as parameters.
    - Optionally, allows specifying the output filename.
 
@@ -57,7 +58,7 @@ pip install pandas openpyxl
 ### Command-Line Interface
 
 ```bash
-python xlsx-compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]
+python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]
 ```
 
 - `<file1.xlsx>`: Path to the first Excel file.
@@ -69,7 +70,7 @@ python xlsx-compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]
 ### Example
 
 ```bash
-python xlsx-compare.py data1.xlsx data2.xlsx result.xlsx
+python xlsx_compare.py data1.xlsx data2.xlsx result.xlsx
 ```
 
 ## Example Output
