@@ -91,10 +91,9 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
     return diff
 
 
-def main():
-    """Main function to compare two Excel files."""
+def get_args():
+    """Get file paths from command-line arguments."""
 
-    # Get file paths from command-line arguments
     parser = argparse.ArgumentParser(description="Compare Excel files sheet by sheet.")
     parser.add_argument("file1", help="First Excel file path")
     parser.add_argument("file2", help="Second Excel file path")
@@ -102,18 +101,24 @@ def main():
         "output",
         nargs="?",
         default="comparison_output.xlsx",
-        help="Output Excel file path"
+        help="Output Excel file path",
     )
     parser.add_argument(
-        "--sheets", 
-        help="Comma-separated list of sheet names to compare (default: all shared and unique sheets)"
+        "--sheets",
+        help="Comma-separated list of sheet names to compare (default: all sheets)",
     )
 
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    """Main function to compare two Excel files."""
+
+    args = get_args()
 
     file1_path = args.file1
     file2_path = args.file2
-    output_path = args.output
+    #output_path = args.output
 
     # Processing start
     print(f"File1: {file1_path}")
@@ -132,7 +137,7 @@ def main():
 
     # Prepare an Excel writer
     print("... Preparing Excel writer")  # to show processing progress
-    output_writer = pd.ExcelWriter(output_path, engine="openpyxl")
+    output_writer = pd.ExcelWriter(args.output, engine="openpyxl")
     print("... Excel writer prepared")  # to show processing progress
 
     # Create a summary list for the COMPARISON sheet
@@ -199,7 +204,7 @@ def main():
 
     # Save the output file
     output_writer.close()
-    print(f"Comparison completed. Output saved as '{output_path}'.")
+    print(f"Comparison completed. Output saved as '{args.output}'.")
 
 
 if __name__ == "__main__":
