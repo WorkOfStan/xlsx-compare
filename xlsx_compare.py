@@ -97,13 +97,17 @@ def get_args():
     return parser.parse_args()
 
 
-def save_differences_to_excel(writer: pd.ExcelWriter, sheet_name: str, differences_df: pd.DataFrame) -> None:
+def save_differences_to_excel(
+    writer: pd.ExcelWriter, sheet_name: str, differences_df: pd.DataFrame
+) -> None:
     """
     Saves the differences dataframe to the given Excel writer under a safe sheet name.
     """
     safe_sheet_name = sheet_name[:28]  # Truncate for valid Excel sheet name
-    # index=False, header=False - not to show additional 1st row and column with indexes
-    differences_df.to_excel(writer, sheet_name=f"df-{safe_sheet_name}", index=False, header=False)
+    # index=False, header=False - not to show additional first row and column with indexes
+    differences_df.to_excel(
+        writer, sheet_name=f"df-{safe_sheet_name}", index=False, header=False
+    )
 
 
 def main():
