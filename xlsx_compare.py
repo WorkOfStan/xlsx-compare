@@ -15,6 +15,7 @@ from openpyxl import load_workbook
 # ANSI escape sequences for console coloring
 class Colors:  # pylint: disable=too-few-public-methods
     """ANSI color escape sequences"""
+
     RESET = "\033[0m"
     BOLD = "\033[1m"
     GREEN = "\033[32m"
@@ -24,8 +25,10 @@ class Colors:  # pylint: disable=too-few-public-methods
     CYAN = "\033[36m"
 
 
-# Function to compare two dataframes cell by cell
 def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
+    """
+    Compares two dataframes cell-by-cell and returns a dataframe with differences.
+    """
     # TODO potential to speed up the comparison
     # if df_left.shape == df_right.shape:
     #    print(f"{Colors.YELLOW}Comparing same shape{Colors.RESET}")
@@ -60,7 +63,9 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
     max_cols = max(df_left.shape[1], df_right.shape[1])
     print(f"Size rows: {max_rows} cols: {max_cols}")
 
-    df_left = df_left.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
+    df_left = df_left.reindex(index=range(max_rows), columns=range(max_cols)).fillna(
+        ""
+    )
     df_right = df_right.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
 
     # Create a DataFrame to store differences
@@ -86,6 +91,7 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
         # TODO Add a function to save the differences to an Excel file
 
     return diff
+
 
 def main():
     """Main function to compare two Excel files."""
@@ -131,7 +137,9 @@ def main():
     all_sheets = set(file1_sheets) | set(file2_sheets)
 
     for sheet in all_sheets:
-        print(f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}")  # Cyan for processing progress
+        print(
+            f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}"
+        )  # Cyan for processing progress
         if sheet not in file1_sheets:
             # Sheet only in file2
             print("... only in file2")
