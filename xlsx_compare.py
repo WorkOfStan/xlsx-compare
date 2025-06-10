@@ -29,19 +29,6 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
     """
     Compares two dataframes cell-by-cell and returns a dataframe with differences.
     """
-    # TODO potential to speed up the comparison
-    # if df_lft.shape == df_rgt.shape:
-    #    print(f"{Colors.YELLOW}Comparing same shape{Colors.RESET}")
-    #    comparison = df_lft.compare(df_rgt, keep_shape=True, keep_equal=False)
-    #    return comparison.dropna(how='all')
-    # BUT THE RETURNED VALUE SHOULD BE PROCESSED LIKE THIS:
-    #    if differences.empty:
-    #        # If there's no difference, just add an info
-    #        pd.DataFrame({"Info": ["No differences found"]})
-    #            .to_excel(output_writer, sheet_name=f"eq-{sheet_handle[:28]}", index=False)
-    #    else:
-    #        # Save the differences
-    #        differences.to_excel(output_writer, sheet_name=f"df-{sheet_handle[:28]}", index=True)
 
     # Normalize data for consistent comparison
     df_lft = (
@@ -86,7 +73,6 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
                 diff_count = diff_count + 1
     if diff_count > 0:
         print(f"{Colors.RED}{diff_count} difference found{Colors.RESET}")
-        # TODO Add a function to save the differences to an Excel file
 
     return diff
 
@@ -109,6 +95,15 @@ def get_args():
     )
 
     return parser.parse_args()
+
+
+def save_differences_to_excel(writer: pd.ExcelWriter, sheet_name: str, differences_df: pd.DataFrame) -> None:
+    """
+    Saves the differences dataframe to the given Excel writer under a safe sheet name.
+    """
+    safe_sheet_name = sheet_name[:28]  # Truncate for valid Excel sheet name
+    # index=False, header=False - not to show additional 1st row and column with indexes
+    differences_df.to_excel(writer, sheet_name=f"df-{safe_sheet_name}", index=False, header=False)
 
 
 def main():
@@ -185,13 +180,7 @@ def main():
             else:
                 print(f"{Colors.RED}... some difference{Colors.RESET}")
                 # Save differences to a separate sheet
-                # index=False, header=False - not to show additional 1st row and column with indexes
-                differences.to_excel(
-                    output_writer,
-                    sheet_name=f"df-{sheet[:28]}", # Truncate for valid Excel sheet name
-                    index=False,
-                    header=False,
-                )
+                save_differences_to_excel(output_writer, sheet, differences)
                 comparison_summary.append([sheet, "Differences found"])
 
     # Write the summary to the COMPARISON sheet
