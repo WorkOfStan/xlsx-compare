@@ -72,6 +72,8 @@ python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]
 
 ```bash
 python xlsx_compare.py data1.xlsx data2.xlsx result.xlsx
+python xlsx_compare.py example/a.xlsx example/b.xlsx example/comparison.xlsx
+# see the example folder, how it looks
 ```
 
 ## Example Output

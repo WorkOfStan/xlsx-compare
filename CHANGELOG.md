@@ -11,11 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Changed` for changes in existing functionality
 
+- GitHub action polish-the-code.yml chains prettier-fix and only then super-linter
+
 ### `Deprecated` for soon-to-be removed features
 
 ### `Removed` for now removed features
 
 ### `Fixed` for any bugfixes
+
+- minor pylint identified issues
+  - xlsx_compare.py:24:5: W0511: TODO potential to speed up the comparison (fixme)
+  - xlsx_compare.py:81:9: W0511: TODO Add a function to save the differences to an Excel file (fixme)
+  - xlsx_compare.py:1:0: C0114: Missing module docstring (missing-module-docstring)
+  - xlsx_compare.py:12:0: C0115: Missing class docstring (missing-class-docstring)
+  - xlsx_compare.py:12:0: R0903: Too few public methods (0/2) (too-few-public-methods)
+  - xlsx_compare.py:23:0: C0116: Missing function or method docstring (missing-function-docstring)
+  - xlsx_compare.py:23:36: W0621: Redefining name 'df1' from outer scope (line 142) (redefined-outer-name)
+  - xlsx_compare.py:23:41: W0621: Redefining name 'df2' from outer scope (line 143) (redefined-outer-name)
 
 ### `Security` in case of vulnerabilities
 
