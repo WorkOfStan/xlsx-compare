@@ -7,7 +7,7 @@ v0.1.1
 """
 
 import sys
-
+import argparse
 import pandas as pd
 from openpyxl import load_workbook
 
@@ -25,7 +25,7 @@ class Colors:  # pylint: disable=too-few-public-methods
     CYAN = "\033[36m"
 
 
-def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
+def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str) -> pd.DataFrame:
     """
     Compares two dataframes cell-by-cell and returns a dataframe with differences.
     """
@@ -66,7 +66,9 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
     df_left = df_left.reindex(index=range(max_rows), columns=range(max_cols)).fillna(
         ""
     )
-    df_right = df_right.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
+    df_right = df_right.reindex(index=range(max_rows), columns=range(max_cols)).fillna(
+        ""
+    )
 
     # Create a DataFrame to store differences
     diff = pd.DataFrame(index=range(max_rows), columns=range(max_cols))
@@ -96,15 +98,18 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str):
 def main():
     """Main function to compare two Excel files."""
 
-    # Ensure the script is called with the correct number of arguments
-    if len(sys.argv) < 3:
-        print("Usage: python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]")
-        sys.exit(1)
-
     # Get file paths from command-line arguments
-    file1_path = sys.argv[1]
-    file2_path = sys.argv[2]
-    output_path = sys.argv[3] if len(sys.argv) > 3 else "comparison_output.xlsx"
+    parser = argparse.ArgumentParser(description="Compare Excel files sheet by sheet.")
+    parser.add_argument("file1", help="First Excel file path")
+    parser.add_argument("file2", help="Second Excel file path")
+    parser.add_argument("output", nargs="?", default="comparison_output.xlsx", help="Output Excel file path")
+    parser.add_argument("--sheets", help="Comma-separated list of sheet names to compare (default: all shared and unique sheets)")
+
+    args = parser.parse_args()
+
+    file1_path = args.file1
+    file2_path = args.file2
+    output_path = args.output
 
     # Processing start
     print(f"File1: {file1_path}")
@@ -134,9 +139,12 @@ def main():
     ]
 
     # Compare sheets
-    all_sheets = set(file1_sheets) | set(file2_sheets)
+    if args.sheets:
+        selected_sheets = [s.strip() for s in args.sheets.split(",")]
+    else:
+        selected_sheets = sorted(set(file1_sheets) | set(file2_sheets))
 
-    for sheet in all_sheets:
+    for sheet in selected_sheets:
         print(
             f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}"
         )  # Cyan for processing progress
@@ -169,7 +177,7 @@ def main():
                 print(f"{Colors.RED}... some difference{Colors.RESET}")
                 # Save differences to a separate sheet
                 safe_sheet_name = sheet[:28]  # Truncate for valid Excel sheet name
-                # index=False, header=False - not to show additional first row and column with indexes
+                # index=False, header=False - not to show additional 1st row and column with indexes
                 differences.to_excel(
                     output_writer,
                     sheet_name=f"df-{safe_sheet_name}",

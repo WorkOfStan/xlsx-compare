@@ -39,6 +39,10 @@
    - Accepts file paths as parameters.
    - Optionally, allows specifying the output filename.
 
+7. **Option to select sheets to compare**:
+
+   - Comma-separated list of sheet names to compare (default: all shared and unique sheets)
+
 ---
 
 ## Installation
@@ -59,19 +63,19 @@ pip install pandas openpyxl
 ### Command-Line Interface
 
 ```bash
-python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx]
+python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1,Sheet2]
 ```
 
 - `<file1.xlsx>`: Path to the first Excel file.
 - `<file2.xlsx>`: Path to the second Excel file.
 - `[output.xlsx]` (optional): Name of the output file. Defaults to `comparison_output.xlsx`.
+- `[--sheets Sheet1,Sheet2]` (optional): Switch with comma separated sheet names to compare.
 
 ---
 
 ### Example
 
 ```bash
-python xlsx_compare.py data1.xlsx data2.xlsx result.xlsx
 python xlsx_compare.py example/a.xlsx example/b.xlsx example/comparison.xlsx
 # see the example folder, how it looks
 ```
