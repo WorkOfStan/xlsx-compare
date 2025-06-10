@@ -153,9 +153,13 @@ def main():
             f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}"
         )  # Cyan for processing progress
         if sheet not in file1_sheets:
-            # Sheet only in file2
-            print("... only in file2")
-            comparison_summary.append([sheet, "Only in file2"])
+            if sheet not in file2_sheets:
+                # Sheet is only in args.sheet
+                print("... only in the --sheets list")
+            else:
+                # Sheet only in file2
+                print("... only in file2")
+                comparison_summary.append([sheet, "Only in file2"])
         elif sheet not in file2_sheets:
             # Sheet only in file1
             print("... only in file1")

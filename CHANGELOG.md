@@ -9,17 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Added` for new features
 
-- argument `--sheets` allows for Comma-separated list of sheet names to compare (default: all shared and unique sheets)
-
 ### `Changed` for changes in existing functionality
-
-- GitHub Action polish-the-code.yml chains prettier-fix and only then super-linter
 
 ### `Deprecated` for soon-to-be removed features
 
 ### `Removed` for now removed features
 
 ### `Fixed` for any bugfixes
+
+### `Security` in case of vulnerabilities
+
+## [0.1.1] - 2025-06-10
+
+feat: Comma-separated list of sheet names to compare
+
+### Added
+
+- argument `--sheets` allows for a comma-separated list of sheet names to compare (default: all shared and unique sheets)
+
+### Changed
+
+- GitHub Action polish-the-code.yml chains prettier-fix and only then super-linter
+
+### Fixed
 
 - minor pylint identified issues
   - xlsx_compare.py:24:5: W0511: todo potential to speed up the comparison (fixme)
@@ -31,13 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - xlsx_compare.py:23:36: W0621: Redefining name 'df1' from outer scope (line 142) (redefined-outer-name)
   - xlsx_compare.py:23:41: W0621: Redefining name 'df2' from outer scope (line 143) (redefined-outer-name)
 
-### `Security` in case of vulnerabilities
-
 ## [0.1.0] - 2025-01-03
 
 ### Added
 
 `XLSX Compare` is a Python script that compares two Excel files, sheet by sheet, and identifies differences. This tool is particularly useful for quickly comparing large Excel files and generating an organized output of the differences. CLI output includes a count of differences in red, making it easy to identify and manage the differences.
 
-[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/WorkOfStan/xlsx-compare/releases/tag/v0.1.0
