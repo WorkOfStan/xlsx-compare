@@ -118,7 +118,7 @@ def main():
 
     file1_path = args.file1
     file2_path = args.file2
-    #output_path = args.output
+    # output_path = args.output
 
     # Processing start
     print(f"File1: {file1_path}")
@@ -185,11 +185,10 @@ def main():
             else:
                 print(f"{Colors.RED}... some difference{Colors.RESET}")
                 # Save differences to a separate sheet
-                safe_sheet_name = sheet[:28]  # Truncate for valid Excel sheet name
                 # index=False, header=False - not to show additional 1st row and column with indexes
                 differences.to_excel(
                     output_writer,
-                    sheet_name=f"df-{safe_sheet_name}",
+                    sheet_name=f"df-{sheet[:28]}", # Truncate for valid Excel sheet name
                     index=False,
                     header=False,
                 )
