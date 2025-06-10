@@ -6,8 +6,8 @@ pip install pandas openpyxl
 v0.1.1
 """
 
-import sys
 import argparse
+
 import pandas as pd
 from openpyxl import load_workbook
 
@@ -25,14 +25,14 @@ class Colors:  # pylint: disable=too-few-public-methods
     CYAN = "\033[36m"
 
 
-def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str) -> pd.DataFrame:
+def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.DataFrame:
     """
     Compares two dataframes cell-by-cell and returns a dataframe with differences.
     """
     # TODO potential to speed up the comparison
-    # if df_left.shape == df_right.shape:
+    # if df_lft.shape == df_rgt.shape:
     #    print(f"{Colors.YELLOW}Comparing same shape{Colors.RESET}")
-    #    comparison = df_left.compare(df_right, keep_shape=True, keep_equal=False)
+    #    comparison = df_lft.compare(df_rgt, keep_shape=True, keep_equal=False)
     #    return comparison.dropna(how='all')
     # BUT THE RETURNED VALUE SHOULD BE PROCESSED LIKE THIS:
     #    if differences.empty:
@@ -44,31 +44,27 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str) -> pd.
     #        differences.to_excel(output_writer, sheet_name=f"df-{sheet_handle[:28]}", index=True)
 
     # Normalize data for consistent comparison
-    df_left = (
-        df_left.fillna("")
+    df_lft = (
+        df_lft.fillna("")
         .astype(str)
         .apply(lambda col: col.str.strip() if col.dtype == "object" else col)
     )
-    df_right = (
-        df_right.fillna("")
+    df_rgt = (
+        df_rgt.fillna("")
         .astype(str)
         .apply(lambda col: col.str.strip() if col.dtype == "object" else col)
     )
     # debug info
-    print(f"Shape of File1 ({sheet_handle}): {df_left.shape}")
-    print(f"Shape of File2 ({sheet_handle}): {df_right.shape}")
+    print(f"Shape of File1 ({sheet_handle}): {df_lft.shape}")
+    print(f"Shape of File2 ({sheet_handle}): {df_rgt.shape}")
 
     # Ensure both DataFrames have the same shape by padding
-    max_rows = max(df_left.shape[0], df_right.shape[0])
-    max_cols = max(df_left.shape[1], df_right.shape[1])
+    max_rows = max(df_lft.shape[0], df_rgt.shape[0])
+    max_cols = max(df_lft.shape[1], df_rgt.shape[1])
     print(f"Size rows: {max_rows} cols: {max_cols}")
 
-    df_left = df_left.reindex(index=range(max_rows), columns=range(max_cols)).fillna(
-        ""
-    )
-    df_right = df_right.reindex(index=range(max_rows), columns=range(max_cols)).fillna(
-        ""
-    )
+    df_lft = df_lft.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
+    df_rgt = df_rgt.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
 
     # Create a DataFrame to store differences
     diff = pd.DataFrame(index=range(max_rows), columns=range(max_cols))
@@ -78,8 +74,8 @@ def compare_dataframes_cell_by_cell(df_left, df_right, sheet_handle: str) -> pd.
 
     for i in range(max_rows):
         for j in range(max_cols):
-            value1 = df_left.iloc[i, j]
-            value2 = df_right.iloc[i, j]
+            value1 = df_lft.iloc[i, j]
+            value2 = df_rgt.iloc[i, j]
 
             # Debugging
             # print(f"Comparing cell ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
@@ -102,8 +98,16 @@ def main():
     parser = argparse.ArgumentParser(description="Compare Excel files sheet by sheet.")
     parser.add_argument("file1", help="First Excel file path")
     parser.add_argument("file2", help="Second Excel file path")
-    parser.add_argument("output", nargs="?", default="comparison_output.xlsx", help="Output Excel file path")
-    parser.add_argument("--sheets", help="Comma-separated list of sheet names to compare (default: all shared and unique sheets)")
+    parser.add_argument(
+        "output",
+        nargs="?",
+        default="comparison_output.xlsx",
+        help="Output Excel file path"
+    )
+    parser.add_argument(
+        "--sheets", 
+        help="Comma-separated list of sheet names to compare (default: all shared and unique sheets)"
+    )
 
     args = parser.parse_args()
 
