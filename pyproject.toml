@@ -1,0 +1,12 @@
+[project]
+name = "xlsx_compare"
+version = "0.2.0"
+description = ""
+authors = [{ name = "Stanislav Rejthar", email = "anonymous@example.com" }]
+dependencies = ["pandas", "openpyxl", "mininterface"]
+requires-python = ">=3.7"
+readme = "README.md"
+license = { text = "MIT" }
+
+[project.scripts]
+xlsx_compare = "xlsx_compare:main"
