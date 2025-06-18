@@ -47,13 +47,11 @@
 
 ## Installation
 
-### Prerequisites
-
 - Python 3.7 or later.
-- Install the required dependencies:
+- Install the package:
 
 ```bash
-pip install pandas openpyxl
+pip install git+https://github.com/WorkOfStan/xlsx-compare.git
 ```
 
 ---
@@ -63,7 +61,7 @@ pip install pandas openpyxl
 ### Command-Line Interface
 
 ```bash
-python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1,Sheet2]
+xlsx_compare <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1,Sheet2]
 ```
 
 - `<file1.xlsx>`: Path to the first Excel file.
@@ -76,7 +74,7 @@ python xlsx_compare.py <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1,
 ### Example
 
 ```bash
-python xlsx_compare.py example/a.xlsx example/b.xlsx example/comparison.xlsx
+xlsx_compare example/a.xlsx example/b.xlsx example/comparison.xlsx
 # see the example folder, how it looks
 ```
 

@@ -1,9 +1,5 @@
 """
 Compare two Excel files sheet-by-sheet and cell-by-cell and export the differences.
-
-first install dependencies:
-pip install pandas openpyxl
-v0.1.1
 """
 
 import argparse
