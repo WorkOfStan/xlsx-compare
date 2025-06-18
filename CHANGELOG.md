@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - installation from the Github package
 
 ### `Changed` for changes in existing functionality
+- CLI migrated to mininterface
 
 ### `Deprecated` for soon-to-be removed features
 
