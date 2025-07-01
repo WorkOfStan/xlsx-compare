@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Invoke the Prettier fix
-        uses: WorkOfStan/prettier-fix@v1.1.4
+        uses: WorkOfStan/prettier-fix@v1.1.5
         with:
           commit-changes: ${{ github.event_name != 'schedule' }}
 
