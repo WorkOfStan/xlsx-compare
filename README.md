@@ -7,40 +7,33 @@
 ## Features
 
 1. **Sheet Comparison**:
-
    - Identifies sheets that exist only in one file.
    - Compares the contents of sheets present in both files.
 
 2. **Handles Differences**:
-
    - Highlights cell-by-cell differences for sheets present in both files.
    - Writes differences into a separate sheet named `df-<sheet_name>`.
    - CLI output contains difference count (in red).
 
 3. **Generates a Summary Sheet**:
-
    - Creates a `COMPARISON` sheet summarizing:
      - Sheets that exist only in `file1` or `file2`.
      - Sheets with no differences.
      - Sheets with differences.
 
 4. **Organized Output**:
-
    - Sheets that exist in only one file are noted in the `COMPARISON` sheet.
    - Sheets with differences are written with only the changed cells in a new sheet.
 
 5. **Performance Optimization**:
-
    - Uses `read_only=True` mode with `openpyxl` for processing large files efficiently.
    - Handles different sheet sizes by padding smaller sheets to match dimensions.
 
 6. **User-Friendly CLI**:
-
    - Accepts file paths as parameters.
    - Optionally, allows specifying the output filename.
 
 7. **Option to select sheets to compare**:
-
    - Comma-separated list of sheet names to compare (default: all shared and unique sheets)
 
 ---
@@ -128,7 +121,6 @@ The script provides color-coded logs for better readability:
 ## Known Issues
 
 1. **DataFrames with Different Shapes**:
-
    - Handled by padding smaller DataFrames with empty values.
 
 2. **Hidden Characters in Data**:
