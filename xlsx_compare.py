@@ -4,7 +4,7 @@ Compare two Excel files sheet-by-sheet and cell-by-cell and export the differenc
 
 import os
 import sys
-from contextlib import ExitStack
+from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -90,9 +90,7 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
     return diff
 
 
-def save_differences_to_excel(
-    writer: pd.ExcelWriter, sheet_name: str, differences_df: pd.DataFrame
-) -> str:
+def save_differences_to_excel(writer: pd.ExcelWriter, sheet_name: str, differences_df: pd.DataFrame) -> str:
     """
     Saves the differences dataframe to the given Excel writer under a safe sheet name.
     """
@@ -103,7 +101,7 @@ def save_differences_to_excel(
     suffix_number = 2
     while report_name.casefold() in existing_names:
         suffix = f"-{suffix_number}"
-        report_name = f"{base_name[:31 - len(suffix)]}{suffix}"
+        report_name = f"{base_name[: 31 - len(suffix)]}{suffix}"
         suffix_number += 1
     # index=False, header=False - not to show additional first row and column with indexes
     write_text_dataframe(writer, report_name, differences_df, header=False)
@@ -171,103 +169,111 @@ def remove_temporary_file(path):
         path.unlink()
 
 
-def run_comparison(args, resources):
-    """Compare workbooks and publish the report only after a successful save."""
-    inputs, output = validate_paths(args)
-
-    file1_path = args.file1
-    file2_path = args.file2
-    # output_path = args.output
-
-    # Processing start
-    print(f"File1: {file1_path}")
-    print(f"File2: {file2_path}")
-
+@contextmanager
+def open_workbook(path):
+    """Close both the workbook and its input stream, including on load failures."""
     # Load Excel workbooks
     # Using the read_only=True parameter makes openpyxl load the workbook in optimized read-only
     # mode. This is particularly useful for large files because it reduces memory usage and skips
     # features like formatting.
-    input_stream1 = resources.enter_context(inputs[0].open("rb"))
-    wb1 = load_workbook(input_stream1, read_only=True, data_only=False)
-    resources.callback(wb1.close)
-    print("... workbook1 loaded, now loading workbook2")  # to show processing progress
-    input_stream2 = resources.enter_context(inputs[1].open("rb"))
-    wb2 = load_workbook(input_stream2, read_only=True, data_only=False)
-    resources.callback(wb2.close)
+    with path.open("rb") as input_stream:
+        workbook = load_workbook(input_stream, read_only=True, data_only=False)
+        try:
+            yield workbook
+        finally:
+            workbook.close()
 
-    file1_sheets = wb1.sheetnames
-    file2_sheets = wb2.sheetnames
 
-    # Compare sheets
-    selected_sheets = select_sheets(args.sheets, file1_sheets, file2_sheets)
+def compare_sheet(sheet, workbooks, output_writer):
+    """Write differences for one sheet and return its summary row."""
+    wb1, wb2 = workbooks
+    print(f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}")  # Cyan for processing progress
+    if sheet not in wb1.sheetnames:
+        # Sheet only in file2
+        print("... only in file2")
+        return [sheet, "Only in file2", ""]
+    if sheet not in wb2.sheetnames:
+        # Sheet only in file1
+        print("... only in file1")
+        return [sheet, "Only in file1", ""]
 
-    # Prepare an Excel writer
-    print("... Preparing Excel writer")  # to show processing progress
-    with NamedTemporaryFile(
-        dir=output.parent, prefix=".xlsx-compare-", suffix=".xlsx", delete=False
-    ) as temporary_file:
-        temporary_path = Path(temporary_file.name)
-    resources.callback(remove_temporary_file, temporary_path)
-    output_stream = resources.enter_context(temporary_path.open("w+b"))
-    writer_resources = resources.enter_context(ExitStack())
-    output_writer = writer_resources.enter_context(pd.ExcelWriter(output_stream, engine="openpyxl"))
+    # Sheet in both files
+    # dtype=str : all data is treated as strings and any non-standard formats are handled
+    # header=None : the first row is also compared
+    df1 = read_sheet(wb1[sheet])
+    df2 = read_sheet(wb2[sheet])
+    # debug
+    # print(f"Data from File1 ({sheet}):")
+    # print(df1)
+    # print(f"Data from File2 ({sheet}):")
+    # print(df2)
+
+    # Compare content cell by cell
+    differences = compare_dataframes_cell_by_cell(df1, df2, sheet)
+    if differences.isnull().all().all():
+        print("... no difference")
+        return [sheet, "No differences", ""]
+    print(f"{Colors.RED}... some difference{Colors.RESET}")
+    # Save differences to a separate sheet
+    report_name = save_differences_to_excel(output_writer, sheet, differences)
+    return [sheet, "Differences found", report_name]
+
+
+def write_report(args, workbooks, selected_sheets, output_writer):
+    """Populate difference sheets and the formatted comparison summary."""
     # Keep a visible sheet so writer cleanup cannot mask a comparison error.
     output_writer.book.create_sheet("COMPARISON")
     print("... Excel writer prepared")  # to show processing progress
 
     # Create a summary list for the COMPARISON sheet
     comparison_summary = [
-        ["File 1", file1_path, ""],
-        ["File 2", file2_path, ""],
+        ["File 1", args.file1, ""],
+        ["File 2", args.file2, ""],
         [],  # Add an empty row for separation
     ]
 
     for sheet in selected_sheets:
-        print(
-            f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}"
-        )  # Cyan for processing progress
-        if sheet not in file1_sheets:
-            # Sheet only in file2
-            print("... only in file2")
-            comparison_summary.append([sheet, "Only in file2", ""])
-        elif sheet not in file2_sheets:
-            # Sheet only in file1
-            print("... only in file1")
-            comparison_summary.append([sheet, "Only in file1", ""])
-        else:
-            # Sheet in both files
-            # dtype=str : all data is treated as strings and any non-standard formats are handled
-            # header=None : the first row is also compared
-            df1 = read_sheet(wb1[sheet])
-            df2 = read_sheet(wb2[sheet])
-            # debug
-            # print(f"Data from File1 ({sheet}):")
-            # print(df1)
-            # print(f"Data from File2 ({sheet}):")
-            # print(df2)
-
-            # Compare content cell by cell
-            differences = compare_dataframes_cell_by_cell(df1, df2, sheet)
-            if differences.isnull().all().all():
-                comparison_summary.append([sheet, "No differences", ""])
-                print("... no difference")
-            else:
-                print(f"{Colors.RED}... some difference{Colors.RESET}")
-                # Save differences to a separate sheet
-                report_name = save_differences_to_excel(output_writer, sheet, differences)
-                comparison_summary.append([sheet, "Differences found", report_name])
+        comparison_summary.append(compare_sheet(sheet, workbooks, output_writer))
 
     # Write the summary to the COMPARISON sheet
     comparison_df = pd.DataFrame(
         comparison_summary,
-        columns=["Sheet Name", "Status", "Difference Sheet"],  # Header row for the comparison summary
+        columns=[
+            "Sheet Name",
+            "Status",
+            "Difference Sheet",
+        ],  # Header row for the comparison summary
     )
     del output_writer.book["COMPARISON"]
     write_text_dataframe(output_writer, "COMPARISON", comparison_df)
 
+
+def run_comparison(args, resources):
+    """Compare workbooks and publish the report only after a successful save."""
+    inputs, output = validate_paths(args)
+    # output_path = args.output
+
+    # Processing start
+    print(f"File1: {args.file1}")
+    print(f"File2: {args.file2}")
+
+    wb1 = resources.enter_context(open_workbook(inputs[0]))
+    print("... workbook1 loaded, now loading workbook2")  # to show processing progress
+    wb2 = resources.enter_context(open_workbook(inputs[1]))
+
+    # Compare sheets
+    selected_sheets = select_sheets(args.sheets, wb1.sheetnames, wb2.sheetnames)
+
+    # Prepare an Excel writer
+    print("... Preparing Excel writer")  # to show processing progress
+    with NamedTemporaryFile(dir=output.parent, prefix=".xlsx-compare-", suffix=".xlsx", delete=False) as temporary_file:
+        temporary_path = Path(temporary_file.name)
+    resources.callback(remove_temporary_file, temporary_path)
+    with temporary_path.open("w+b") as output_stream:
+        with pd.ExcelWriter(output_stream, engine="openpyxl") as output_writer:
+            write_report(args, (wb1, wb2), selected_sheets, output_writer)
+
     # Save the output file
-    writer_resources.close()
-    output_stream.close()
     os.replace(temporary_path, output)
     print(f"Comparison completed. Output saved as '{args.output}'.")
 
