@@ -19,6 +19,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Security` in case of vulnerabilities
 
+## [0.2.1] - 2026-10-20
+
+feat: compare formulas
+
+### Added
+
+- Add a `Difference Sheet` summary column, test dependencies, and regression tests for comparison accuracy and safe report publication.
+
+### Fixed
+
+- Preserve literal missing-value strings and compare formula expressions directly from the open workbooks.
+- Apply whitespace normalization consistently and allocate unique report sheet names after truncation.
+- Validate sheet selections and report missing inputs with resolved paths and working-directory guidance.
+- Close workbook and writer resources on failure and replace reports only after a successful temporary-file save.
+- Keep bold, centered, thin-bordered COMPARISON headers.
+- Preserve the mininterface CLI and combine its regression tests with formula comparison and file-safety coverage.
+
+### Security
+
+- Reject output paths that alias either input and write formula-like report values as literal text.
+
 ## [0.2.0] - 2026-10-21
 
 feat: installation from the GitHub package, CLI migrated to mininterface
@@ -72,7 +93,8 @@ feat: Comma-separated list of sheet names to compare
 
 `XLSX Compare` is a Python script that compares two Excel files, sheet by sheet, and identifies differences. This tool is particularly useful for quickly comparing large Excel files and generating an organized output of the differences. CLI output includes a count of differences in red, making it easy to identify and manage the differences.
 
-[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/WorkOfStan/xlsx-compare/releases/tag/v0.1.0
