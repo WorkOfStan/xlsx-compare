@@ -55,6 +55,7 @@ pip install git+https://github.com/WorkOfStan/xlsx-compare.git
 ```
 
 The package limits `mininterface` to version 1.2.2 or earlier for Windows compatibility.
+It also installs the `basic` extra required for CLI argument parsing.
 
 ---
 
