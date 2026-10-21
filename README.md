@@ -58,13 +58,7 @@ pip install git+https://github.com/WorkOfStan/xlsx-compare.git
 The package limits `mininterface` to version 1.2.2 or earlier for Windows compatibility.
 It also installs the `basic` extra required for CLI argument parsing.
 
-For running the regression tests, also install `pytest`:
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -c "from pathlib import Path; Path('.tmp').mkdir(exist_ok=True)"
-python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest
-```
+For editable installation and running tests, see [Development and contributing](#development-and-contributing).
 
 ---
 
@@ -130,8 +124,8 @@ Sheet selections must not contain empty names or names missing from both inputs.
 ### Example
 
 ```bash
-xlsx_compare example/a.xlsx example/b.xlsx example/comparison.xlsx
-xlsx_compare example/a.xlsx example/b.xlsx example/comparison-cached-values.xlsx --cached-values
+xlsx_compare examples/a.xlsx examples/b.xlsx examples/comparison.xlsx
+xlsx_compare examples/a.xlsx examples/b.xlsx examples/comparison-cached-values.xlsx --cached-values
 # see the example folder, how it looks
 ```
 
@@ -154,6 +148,22 @@ xlsx_compare example/a.xlsx example/b.xlsx example/comparison-cached-values.xlsx
 If cell `A1` changes from `Value1` to `Value2`, cell `A1` in `df-Sheet4` contains the literal text `Value1 -> Value2`.
 
 Difference sheets preserve the original cell coordinates, add no header row or index column, and leave unchanged cells blank. Changed cells use plain text without cell highlighting.
+
+---
+
+## Development and contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+Use an activated virtual environment with Python 3.11 or later. From the repository root, install the project in editable mode and its development tools, then run the regression tests:
+
+```bash
+python -m pip install -e . -r requirements-dev.txt
+python -c "from pathlib import Path; Path('.tmp').mkdir(exist_ok=True)"
+python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
+```
+
+See [AGENTS.md](AGENTS.md) for repository change requirements and detailed formatting and lint commands.
 
 ---
 
@@ -195,12 +205,6 @@ The following colors are planned and are not implemented:
 The comparison normalizes whitespace and missing values, pads both sheets to matching dimensions, and compares their cell arrays in bulk. A boolean mask identifies changed cells, so `old -> new` text is built only for those positions. This avoids per-cell pandas indexing while preserving the report's original cell coordinates and blank unchanged cells.
 
 Sheets are processed sequentially in one process. Each shared sheet is loaded into DataFrames, so memory use still grows with sheet size; reading and writing XLSX files also contribute to total runtime.
-
----
-
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 ---
 
