@@ -192,14 +192,15 @@ def compare_sheet(sheet, workbooks, output_writer):
     print(f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}")  # Cyan for processing progress
     if sheet not in wb1.sheetnames:
         # Sheet only in file2
-        print("... only in file2")
+        print(f"{Colors.YELLOW}[ONLY]{Colors.RESET} ... only in file2")
         return [sheet, "Only in file2", ""]
     if sheet not in wb2.sheetnames:
         # Sheet only in file1
-        print("... only in file1")
+        print(f"{Colors.YELLOW}[ONLY]{Colors.RESET} ... only in file1")
         return [sheet, "Only in file1", ""]
 
     # Sheet in both files
+    print(f"{Colors.GREEN}[COMPARE]{Colors.RESET} Comparing sheet: {sheet}")
     # dtype=str : all data is treated as strings and any non-standard formats are handled
     # header=None : the first row is also compared
     df1 = read_sheet(wb1[sheet])
@@ -213,7 +214,7 @@ def compare_sheet(sheet, workbooks, output_writer):
     # Compare content cell by cell
     differences = compare_dataframes_cell_by_cell(df1, df2, sheet)
     if differences.isnull().all().all():
-        print("... no difference")
+        print(f"{Colors.BLUE}[SAME]{Colors.RESET} ... no difference")
         return [sheet, "No differences", ""]
     print(f"{Colors.RED}... some difference{Colors.RESET}")
     # Save differences to a separate sheet
