@@ -19,13 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Security` in case of vulnerabilities
 
-## [0.2.1] - 2026-10-20
+## [0.2.1] - 2026-10-21
 
 feat: compare formulas
 
 ### Added
 
 - Add a `Difference Sheet` summary column, test dependencies, and regression tests for comparison accuracy and safe report publication.
+
+### Changed
+
+- docs(example): compare cells where a different formula have a different/same result
 
 ### Fixed
 
