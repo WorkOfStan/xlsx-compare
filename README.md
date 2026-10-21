@@ -76,19 +76,26 @@ Run `xlsx_compare`, the command installed by the Python package, in a terminal s
 The usage synopsis below uses `<...>` for required arguments and `[...]` for optional arguments; omit these markers when running the command.
 
 ```text
-xlsx_compare <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1 Sheet2 ...]
+xlsx_compare <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1 Sheet2 ...] [--cached-values]
 ```
 
 - `<file1.xlsx>`: Path to the first Excel file.
 - `<file2.xlsx>`: Path to the second Excel file.
 - `[output.xlsx]` (optional): Name of the output file. Defaults to `comparison_output.xlsx`.
 - `[--sheets Sheet1 Sheet2 ...]` (optional): Sheet names separated by spaces. Quote names containing spaces. Omit this option to compare all sheets.
+- `[--cached-values]` (optional): Compare cached formula results instead of formula expressions. Disabled by default.
 
 ```bash
 xlsx_compare a.xlsx b.xlsx c1.xlsx --sheets Sheet1 "Sheet 2"
 ```
 
 `--sheets Sheet1,Sheet2` is treated as one sheet name, not two.
+
+To compare cached results:
+
+```bash
+xlsx_compare a.xlsx b.xlsx report.xlsx --cached-values
+```
 
 ### Graphical User Interface
 
@@ -100,6 +107,8 @@ In the sheet-selection field, enter a list with square brackets and quoted names
 
 Use `[]` to compare all sheets. Plain text such as `Sheet1,Sheet2` or `Sheet1 Sheet2` is not the correct GUI format.
 
+Enable the `cached_values` checkbox to compare cached formula results. Leave it unchecked to compare formula expressions.
+
 Relative paths are resolved from the terminal's current working directory. Use absolute input paths or change to the directory containing your workbooks before running the script. Missing-file errors display the resolved path and working directory.
 
 The output must refer to a different file from both inputs, including aliases and hard links. An existing output report is replaced only after the new report is saved successfully. Expected errors return a nonzero exit status without publishing a partial report.
@@ -108,7 +117,8 @@ Sheet selections must not contain empty names or names missing from both inputs.
 
 ### Comparison behavior
 
-- Compare formula expressions, such as `=SUM(A1:A3)`, rather than cached calculated results. The script does not calculate formulas.
+- Compare formula expressions, such as `=SUM(A1:A3)`, by default. With `--cached-values`, compare their stored results using `openpyxl`'s `data_only=True`. The script does not calculate formulas or verify whether cached results are current; recalculate and save both inputs in Excel before comparing cached values.
+- If a formula on a selected sheet shared by both inputs has no cached result, report its file, sheet, and cell and exit with status `1` before creating a report. An existing report remains unchanged. Zero, `False`, and cached empty text are valid results. Missing results on unselected or one-sided sheets do not block comparison.
 - Preserve literal text such as `NA`, `NULL`, and `N/A`; these are distinct from blank cells.
 - Ignore leading and trailing whitespace consistently. Treat missing cells as empty strings and normalize cell values to strings.
 - Compare values at their original coordinates, including the first row. Formatting changes are outside the comparison.
@@ -120,6 +130,7 @@ Sheet selections must not contain empty names or names missing from both inputs.
 
 ```bash
 xlsx_compare example/a.xlsx example/b.xlsx example/comparison.xlsx
+xlsx_compare example/a.xlsx example/b.xlsx example/comparison-cached-values.xlsx --cached-values
 # see the example folder, how it looks
 ```
 

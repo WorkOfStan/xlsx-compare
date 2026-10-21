@@ -4,7 +4,7 @@ Compare two Excel files sheet-by-sheet and cell-by-cell and export the differenc
 
 import os
 import sys
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, closing, contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -31,6 +31,9 @@ class Env:
 
     sheets: list[str] = field(default_factory=list)
     "Sheet names to compare (default: all sheets)"
+
+    cached_values: bool = False
+    "Compare cached formula results instead of formula expressions (without recalculating)"
 
 
 # ANSI escape sequences for console coloring
@@ -159,7 +162,7 @@ def validate_paths(args):
 
 
 def read_sheet(worksheet):
-    """Preserve text and formula expressions without missing-value inference."""
+    """Preserve loaded text, formulas, or cached values without missing-value inference."""
     return pd.DataFrame(worksheet.iter_rows(values_only=True), dtype=object)
 
 
@@ -170,14 +173,14 @@ def remove_temporary_file(path):
 
 
 @contextmanager
-def open_workbook(path):
+def open_workbook(path, data_only=False):
     """Close both the workbook and its input stream, including on load failures."""
     # Load Excel workbooks
     # Using the read_only=True parameter makes openpyxl load the workbook in optimized read-only
     # mode. This is particularly useful for large files because it reduces memory usage and skips
     # features like formatting.
     with path.open("rb") as input_stream:
-        workbook = load_workbook(input_stream, read_only=True, data_only=False)
+        workbook = load_workbook(input_stream, read_only=True, data_only=data_only)
         try:
             yield workbook
         finally:
@@ -248,6 +251,32 @@ def write_report(args, workbooks, selected_sheets, output_writer):
     write_text_dataframe(output_writer, "COMPARISON", comparison_df)
 
 
+def validate_cached_sheet(path, formulas, cached):
+    """Reject formulas without cached results, accepting empty string results."""
+    with closing(formulas.iter_rows()) as formula_rows, closing(cached.iter_rows()) as cached_rows:
+        for formula_row, cached_row in zip(formula_rows, cached_rows):
+            for formula_cell, cached_cell in zip(formula_row, cached_row):
+                if (
+                    formula_cell.data_type == "f"
+                    and cached_cell.value is None
+                    and cached_cell.data_type not in ("str", "s", "inlineStr")
+                ):
+                    raise ValueError(
+                        f"Missing cached formula result in '{path}', sheet '{formulas.title}', "
+                        f"cell {formula_cell.coordinate}. Recalculate and save the workbook in Excel "
+                        "before using --cached-values."
+                    )
+
+
+def validate_cached_values(inputs, workbooks, selected_sheets, resources):
+    """Check cached results only on selected sheets shared by both inputs."""
+    shared_sheets = [sheet for sheet in selected_sheets if all(sheet in book.sheetnames for book in workbooks)]
+    for path, cached in zip(inputs, workbooks):
+        formulas = resources.enter_context(open_workbook(path))
+        for sheet in shared_sheets:
+            validate_cached_sheet(path, formulas[sheet], cached[sheet])
+
+
 def run_comparison(args, resources):
     """Compare workbooks and publish the report only after a successful save."""
     inputs, output = validate_paths(args)
@@ -257,12 +286,14 @@ def run_comparison(args, resources):
     print(f"File1: {args.file1}")
     print(f"File2: {args.file2}")
 
-    wb1 = resources.enter_context(open_workbook(inputs[0]))
+    wb1 = resources.enter_context(open_workbook(inputs[0], data_only=args.cached_values))
     print("... workbook1 loaded, now loading workbook2")  # to show processing progress
-    wb2 = resources.enter_context(open_workbook(inputs[1]))
+    wb2 = resources.enter_context(open_workbook(inputs[1], data_only=args.cached_values))
 
     # Compare sheets
     selected_sheets = select_sheets(args.sheets, wb1.sheetnames, wb2.sheetnames)
+    if args.cached_values:
+        validate_cached_values(inputs, (wb1, wb2), selected_sheets, resources)
 
     # Prepare an Excel writer
     print("... Preparing Excel writer")  # to show processing progress

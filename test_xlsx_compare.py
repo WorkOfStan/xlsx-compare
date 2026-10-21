@@ -6,6 +6,7 @@ from contextlib import ExitStack
 from functools import partial
 from pathlib import Path
 from types import SimpleNamespace
+from xml.etree import ElementTree
 from zipfile import ZipFile
 
 import pandas as pd
@@ -44,6 +45,31 @@ def run_cli(monkeypatch, left, right, output, *options):
     """Run the real CLI entrypoint with controlled arguments."""
     monkeypatch.setattr(sys, "argv", ["xlsx_compare.py", str(left), str(right), str(output), *options])
     return app.main()
+
+
+def make_cached_workbook(path, formulas, cached_values):
+    """Insert synthetic cached results into formula cells without running Excel."""
+    make_workbook(path, {"Sheet": formulas})
+    with ZipFile(path) as archive:
+        contents = {name: archive.read(name) for name in archive.namelist()}
+    namespace = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    worksheet = ElementTree.fromstring(contents["xl/worksheets/sheet1.xml"])
+    for cell in worksheet.iter(f"{namespace}c"):
+        if cell.get("r") not in cached_values:
+            continue
+        data_type, value = cached_values[cell.get("r")]
+        cell.set("t", data_type)
+        cached = cell.find(f"{namespace}v")
+        assert cached is not None
+        if value is None:
+            cell.remove(cached)
+        else:
+            cached.text = value
+    contents["xl/worksheets/sheet1.xml"] = ElementTree.tostring(worksheet)
+    with ZipFile(path, "w") as archive:
+        for name, content in contents.items():
+            archive.writestr(name, content)
+    return path
 
 
 def summary_rows(workbook):
@@ -280,8 +306,9 @@ def simulate_failure(monkeypatch, failure, left, right):
         monkeypatch.setattr(app, "compare_dataframes_cell_by_cell", fail)
 
 
+@pytest.mark.parametrize("cached_values", [False, True])
 @pytest.mark.parametrize("failure", ["success", "missing", "corrupt", "xml", "save", "replace", "compare"])
-def test_failures_close_resources_and_preserve_report(tmp_path, monkeypatch, capsys, failure):
+def test_failures_close_resources_and_preserve_report(tmp_path, monkeypatch, capsys, failure, cached_values):
     """Close resources on every exit and preserve existing reports on failure."""
     left = make_workbook(tmp_path / "left.xlsx", {"Sheet": {"A1": "left"}})
     right = make_workbook(tmp_path / "right.xlsx", {"Sheet": {"A1": "right"}})
@@ -289,7 +316,8 @@ def test_failures_close_resources_and_preserve_report(tmp_path, monkeypatch, cap
     output.write_bytes(b"existing report")
     tracked = track_resources(monkeypatch)
     simulate_failure(monkeypatch, failure, left, right)
-    assert run_cli(monkeypatch, left, right, output) == (0 if failure == "success" else 1)
+    options = ("--cached-values",) if cached_values else ()
+    assert run_cli(monkeypatch, left, right, output, *options) == (0 if failure == "success" else 1)
     error = capsys.readouterr().err
     assert ("Error:" in error) == (failure != "success")
     if failure == "missing":
@@ -369,20 +397,22 @@ def test_example_report(tmp_path, monkeypatch):
         ),
     ],
 )
-def test_positional_output(arguments, expected_output, expected_sheets):
+@pytest.mark.parametrize("cached_values", [False, True])
+def test_positional_output(arguments, expected_output, expected_sheets, cached_values):
     """Parse real CLI arguments without opening an interactive interface."""
     env = run(
         app.Env,
         interface=Mininterface,
         config_file=False,
         ask_for_missing=False,
-        args=arguments,
+        args=arguments + (["--cached-values"] if cached_values else []),
     ).env
 
     assert env.file1 == Path("a.xlsx")
     assert env.file2 == Path("b.xlsx")
     assert env.output == Path(expected_output)
     assert env.sheets == expected_sheets
+    assert env.cached_values is cached_values
 
 
 @pytest.mark.parametrize("output_name", [None, "c1.xlsx"])
@@ -440,3 +470,94 @@ def test_sheet_names_with_spaces_or_commas(tmp_path, monkeypatch, sheet_name):
         assert list(summary_rows(workbook)) == [sheet_name]
     finally:
         workbook.close()
+
+
+@pytest.mark.parametrize("cached_values", [False, True])
+@pytest.mark.parametrize(
+    "comparison",
+    [
+        (("=1+1", "=2"), (("n", "2"), ("n", "2")), None),
+        (("=1+1", "=1+1"), (("n", "2"), ("n", "3")), "2 -> 3"),
+        (("=1-1", "=0"), (("n", "0"), ("n", "0")), None),
+        (("=1-1", "=1"), (("n", "0"), ("n", "1")), "0 -> 1"),
+        (("=FALSE()", "=FALSE()"), (("b", "0"), ("b", "0")), None),
+        (("=FALSE()", "=TRUE()"), (("b", "0"), ("b", "1")), "False -> True"),
+        (('=""', '=""'), (("str", ""), ("str", "")), None),
+        (('=""', '="text"'), (("str", ""), ("str", "text")), " -> text"),
+        (('="  text "', '="text"'), (("str", "  text "), ("str", "text")), None),
+        (('="NA"', '=""'), (("str", "NA"), ("str", "")), "NA -> "),
+        (('="=old"', '="=new"'), (("str", "=old"), ("str", "=new")), "=old -> =new"),
+    ],
+)
+def test_formula_comparison_modes(tmp_path, monkeypatch, cached_values, comparison):
+    """Compare actual formula expressions or cached results and keep output literal."""
+    formulas, caches, cached_difference = comparison
+    left = make_cached_workbook(tmp_path / "left.xlsx", {"C3": formulas[0]}, {"C3": caches[0]})
+    right = make_cached_workbook(tmp_path / "right.xlsx", {"C3": formulas[1]}, {"C3": caches[1]})
+    original_inputs = (left.read_bytes(), right.read_bytes())
+    output = tmp_path / "report.xlsx"
+    options = ("--cached-values",) if cached_values else ()
+    assert run_cli(monkeypatch, left, right, output, *options) == 0
+    assert (left.read_bytes(), right.read_bytes()) == original_inputs
+    expected = cached_difference if cached_values else None
+    if not cached_values and formulas[0] != formulas[1]:
+        expected = f"{formulas[0]} -> {formulas[1]}"
+    with app.open_workbook(output) as workbook:
+        if expected is None:
+            assert summary_rows(workbook)["Sheet"] == ("No differences", None)
+            assert workbook.sheetnames == ["COMPARISON"]
+        else:
+            assert summary_rows(workbook)["Sheet"] == ("Differences found", "df-Sheet")
+            assert workbook["df-Sheet"]["C3"].value == expected
+            assert workbook["df-Sheet"]["C3"].data_type == "s"
+
+
+@pytest.mark.parametrize("missing_input", [0, 1])
+@pytest.mark.parametrize("missing_value", [None, ""])
+def test_missing_cached_result_preserves_report(tmp_path, monkeypatch, capsys, missing_input, missing_value):
+    """Reject mixed available/missing caches before output creation and close inputs."""
+    paths = [tmp_path / "left.xlsx", tmp_path / "right.xlsx"]
+    for index, path in enumerate(paths):
+        cache = missing_value if index == missing_input else "4"
+        make_cached_workbook(path, {"A1": "=1+1", "C3": "=2+2"}, {"A1": ("n", "2"), "C3": ("n", cache)})
+    original_inputs = [path.read_bytes() for path in paths]
+    output = tmp_path / "report.xlsx"
+    output.write_bytes(b"existing report")
+    tracked = track_resources(monkeypatch)
+
+    def reject_output_creation(*_args, **_kwargs):
+        pytest.fail("Missing cache must be detected before creating temporary output")
+
+    monkeypatch.setattr(app, "NamedTemporaryFile", reject_output_creation)
+    assert run_cli(monkeypatch, *paths, output, "--cached-values") == 1
+    error = capsys.readouterr().err
+    assert "Missing cached formula result" in error
+    assert str(paths[missing_input].resolve()) in error
+    assert "sheet 'Sheet', cell C3" in error
+    assert "Recalculate and save" in error
+    assert "--cached-values" in error
+    assert output.read_bytes() == b"existing report"
+    assert [path.read_bytes() for path in paths] == original_inputs
+    assert tracked.closed == list(reversed(tracked.opened))
+    assert all(stream.closed for stream in tracked.streams)
+    assert not list(tmp_path.glob(".xlsx-compare-*"))
+
+
+def test_cached_values_ignore_uncompared_sheets(tmp_path, monkeypatch):
+    """Allow missing caches on unselected sheets and sheets present in only one input."""
+    left = make_workbook(
+        tmp_path / "left.xlsx", {"Sheet": {"A1": "same"}, "Skipped": {"A1": "=1+1"}, "OnlyLeft": {"A1": "=1"}}
+    )
+    right = make_workbook(
+        tmp_path / "right.xlsx", {"Sheet": {"A1": "same"}, "Skipped": {"A1": "=2+2"}, "OnlyRight": {"A1": "=2"}}
+    )
+    output = tmp_path / "report.xlsx"
+    assert (
+        run_cli(monkeypatch, left, right, output, "--cached-values", "--sheets", "Sheet", "OnlyLeft", "OnlyRight") == 0
+    )
+    with app.open_workbook(output) as workbook:
+        assert summary_rows(workbook) == {
+            "Sheet": ("No differences", None),
+            "OnlyLeft": ("Only in file1", None),
+            "OnlyRight": ("Only in file2", None),
+        }
