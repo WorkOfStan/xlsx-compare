@@ -38,8 +38,9 @@ feat: installation from the GitHub package, CLI migrated to mininterface
 
 - Restore the optional third positional argument for the output file, defaulting to `comparison_output.xlsx`.
 - Correct README sheet-selection syntax for the CLI and document GUI list input.
-- Explicitly package only `xlsx_compare` so the top-level test module does not prevent installation in CI.
-- Install `mininterface[basic]` so fresh installations include the CLI parser dependencies required by the application and tests.
+- ci: Explicitly package only `xlsx_compare` so the top-level test module does not prevent installation in CI.
+- ci: Install `mininterface[basic]` so fresh installations include the CLI parser dependencies required by the application and tests.
+- ci: Create `.tmp` before running pytest in the Polish the code workflow so temporary fixtures work in fresh checkouts.
 
 ## [0.1.1] - 2025-06-10
 
