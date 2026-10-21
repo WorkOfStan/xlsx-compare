@@ -41,7 +41,7 @@
 
 7. **Option to select sheets to compare**:
 
-   - Comma-separated list of sheet names to compare (default: all shared and unique sheets)
+   - Select sheet names through the CLI or GUI (default: all shared and unique sheets).
 
 ---
 
@@ -54,20 +54,42 @@
 pip install git+https://github.com/WorkOfStan/xlsx-compare.git
 ```
 
+The package limits `mininterface` to version 1.2.2 or earlier for Windows compatibility.
+It also installs the `basic` extra required for CLI argument parsing.
+
 ---
 
 ## Usage
 
 ### Command-Line Interface
 
-```bash
-xlsx_compare <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1,Sheet2]
+Run `xlsx_compare`, the command installed by the Python package, in a terminal such as Bash or PowerShell.
+The usage synopsis below uses `<...>` for required arguments and `[...]` for optional arguments; omit these markers when running the command.
+
+```text
+xlsx_compare <file1.xlsx> <file2.xlsx> [output.xlsx] [--sheets Sheet1 Sheet2 ...]
 ```
 
 - `<file1.xlsx>`: Path to the first Excel file.
 - `<file2.xlsx>`: Path to the second Excel file.
 - `[output.xlsx]` (optional): Name of the output file. Defaults to `comparison_output.xlsx`.
-- `[--sheets Sheet1,Sheet2]` (optional): Switch with comma separated sheet names to compare.
+- `[--sheets Sheet1 Sheet2 ...]` (optional): Sheet names separated by spaces. Quote names containing spaces. Omit this option to compare all sheets.
+
+```bash
+xlsx_compare a.xlsx b.xlsx c1.xlsx --sheets Sheet1 "Sheet 2"
+```
+
+`--sheets Sheet1,Sheet2` is treated as one sheet name, not two.
+
+### Graphical User Interface
+
+In the sheet-selection field, enter a list with square brackets and quoted names separated by commas:
+
+```json
+["Sheet1", "Sheet 2"]
+```
+
+Use `[]` to compare all sheets. Plain text such as `Sheet1,Sheet2` or `Sheet1 Sheet2` is not the correct GUI format.
 
 ---
 

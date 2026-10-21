@@ -5,9 +5,9 @@ Compare two Excel files sheet-by-sheet and cell-by-cell and export the differenc
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from mininterface.cli import Positional
 import pandas as pd
 from mininterface import run
+from mininterface.cli import Positional
 from openpyxl import load_workbook
 
 
@@ -19,7 +19,7 @@ class Env:
     """First Excel file path"""
     file2: Positional[Path]
     """Second Excel file path"""
-    output: Path = Path("comparison_output.xlsx")
+    output: Positional[Path] = Path("comparison_output.xlsx")
     """Output Excel file path"""
 
     sheets: list[str] = field(default_factory=lambda: [])
