@@ -33,6 +33,7 @@
 5. **Performance Optimization**:
 
    - Uses `read_only=True` mode with `openpyxl` for processing large files efficiently.
+   - Compares normalized cell arrays in bulk and builds difference text only for changed cells.
 
 6. **User-Friendly CLI**:
 
@@ -189,31 +190,11 @@ The following colors are planned and are not implemented:
 
 ---
 
-## Future Enhancements
+## Comparison performance
 
-1. Improve comparison speed by leveraging optimized pandas operations. E.g. developing this idea:
+The comparison normalizes whitespace and missing values, pads both sheets to matching dimensions, and compares their cell arrays in bulk. A boolean mask identifies changed cells, so `old -> new` text is built only for those positions. This avoids per-cell pandas indexing while preserving the report's original cell coordinates and blank unchanged cells.
 
-```python
-def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.DataFrame:
-    """
-    Compares two dataframes cell-by-cell and returns a dataframe with differences.
-    """
-    # TODO potential to speed up the comparison
-    # if df_lft.shape == df_rgt.shape:
-    #    print(f"{Colors.YELLOW}Comparing same shape{Colors.RESET}")
-    #    comparison = df_lft.compare(df_rgt, keep_shape=True, keep_equal=False)
-    #    return comparison.dropna(how='all')
-    # BUT THE RETURNED VALUE SHOULD BE PROCESSED LIKE THIS:
-    #    if differences.empty:
-    #        # If there's no difference, just add an info
-    #        pd.DataFrame({"Info": ["No differences found"]})
-    #            .to_excel(output_writer, sheet_name=f"eq-{sheet_handle[:28]}", index=False)
-    #    else:
-    #        # Save the differences
-    #        differences.to_excel(output_writer, sheet_name=f"df-{sheet_handle[:28]}", index=True)
-
-    # Normalize data for consistent comparison
-```
+Sheets are processed sequentially in one process. Each shared sheet is loaded into DataFrames, so memory use still grows with sheet size; reading and writing XLSX files also contribute to total runtime.
 
 ---
 
