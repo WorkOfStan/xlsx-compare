@@ -15,6 +15,7 @@
 
    - Highlights cell-by-cell differences for sheets present in both files.
    - Writes differences into a separate sheet named `df-<sheet_name>`.
+   - Truncates long report sheet names and adds numbered suffixes when names collide; the summary's `Difference Sheet` column identifies each report sheet.
    - CLI output contains difference count (in red).
 
 3. **Generates a Summary Sheet**:
@@ -57,6 +58,14 @@ pip install git+https://github.com/WorkOfStan/xlsx-compare.git
 The package limits `mininterface` to version 1.2.2 or earlier for Windows compatibility.
 It also installs the `basic` extra required for CLI argument parsing.
 
+For running the regression tests, also install `pytest`:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -c "from pathlib import Path; Path('.tmp').mkdir(exist_ok=True)"
+python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest
+```
+
 ---
 
 ## Usage
@@ -91,6 +100,20 @@ In the sheet-selection field, enter a list with square brackets and quoted names
 
 Use `[]` to compare all sheets. Plain text such as `Sheet1,Sheet2` or `Sheet1 Sheet2` is not the correct GUI format.
 
+Relative paths are resolved from the terminal's current working directory. Use absolute input paths or change to the directory containing your workbooks before running the script. Missing-file errors display the resolved path and working directory.
+
+The output must refer to a different file from both inputs, including aliases and hard links. An existing output report is replaced only after the new report is saved successfully. Expected errors return a nonzero exit status without publishing a partial report.
+
+Sheet selections must not contain empty names or names missing from both inputs. Duplicate names are compared once, in the order supplied. A sheet present in only one input is still included in the summary.
+
+### Comparison behavior
+
+- Compare formula expressions, such as `=SUM(A1:A3)`, rather than cached calculated results. The script does not calculate formulas.
+- Preserve literal text such as `NA`, `NULL`, and `N/A`; these are distinct from blank cells.
+- Ignore leading and trailing whitespace consistently. Treat missing cells as empty strings and normalize cell values to strings.
+- Compare values at their original coordinates, including the first row. Formatting changes are outside the comparison.
+- Write report values as literal text, including values beginning with `=`, so Excel does not execute them as formulas.
+
 ---
 
 ### Example
@@ -104,15 +127,15 @@ xlsx_compare example/a.xlsx example/b.xlsx example/comparison.xlsx
 
 ### COMPARISON Sheet
 
-| **Sheet Name** | **Status**        |
-| -------------- | ----------------- |
-| `File 1`       | file1.xlsx        |
-| `File 2`       | file2.xlsx        |
-|                |                   |
-| `Sheet1`       | No differences    |
-| `Sheet2`       | Only in file1     |
-| `Sheet3`       | Only in file2     |
-| `Sheet4`       | Differences found |
+| **Sheet Name** | **Status**        | **Difference Sheet** |
+| -------------- | ----------------- | -------------------- |
+| `File 1`       | file1.xlsx        |                      |
+| `File 2`       | file2.xlsx        |                      |
+|                |                   |                      |
+| `Sheet1`       | No differences    |                      |
+| `Sheet2`       | Only in file1     |                      |
+| `Sheet3`       | Only in file2     |                      |
+| `Sheet4`       | Differences found | `df-Sheet4`          |
 
 ### Sheet with Differences (e.g., `df-Sheet4`)
 
@@ -125,7 +148,7 @@ xlsx_compare example/a.xlsx example/b.xlsx example/comparison.xlsx
 ## Debugging
 
 - **Row Count Issue**:
-  - By default, `pandas.read_excel` treats the first row as the header. To compare all rows, the script uses `header=None`.
+  - The script reads worksheet rows directly, so the first row is compared at its original coordinates.
 - **Performance**:
   - The script uses `read_only=True` for large files to reduce memory usage.
 - **Shapes Mismatch**:
@@ -153,6 +176,10 @@ The script provides color-coded logs for better readability:
 
 2. **Hidden Characters in Data**:
    - Automatically strips leading/trailing whitespace.
+
+3. **Sparklines**:
+   - Sparkline formatting (in-cell charts) is ignored because `openpyxl` does not support Sparkline Group extensions.
+   - The warning `Sparkline Group extension is not supported and will be removed` does not prevent cell-value or formula comparison. Input files remain unchanged.
 
 ---
 
@@ -187,6 +214,26 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+
+### Python formatting
+
+GitHub Action calling Super-linter is taking care of formatting. Description below is just to explain what's going on.
+
+Use a 120-character line length for Python. Super-Linter loads Black, isort, and Pylint settings from
+`.github/linters/.python-black`, `.github/linters/.isort.cfg`, and `.github/linters/.python-lint`;
+these match its Ruff configuration. This keeps formatting and lint checks consistent.
+Custom configuration files replace Super-Linter's defaults. The Pylint configuration preserves
+Super-Linter v9.0.0's `jobs=0` and `disable=import-error` settings and adds the 120-character limit.
+Compare these defaults when upgrading Super-Linter.
+
+To run the same checks locally after installing `black`, `isort`, `pylint`, and `ruff`:
+
+```bash
+python -m black --check --config .github/linters/.python-black xlsx_compare.py test_xlsx_compare.py
+python -m isort --check-only --settings-path .github/linters/.isort.cfg xlsx_compare.py test_xlsx_compare.py
+python -m ruff format --check --line-length 120 xlsx_compare.py test_xlsx_compare.py
+python -m pylint --persistent=n --rcfile .github/linters/.python-lint xlsx_compare.py test_xlsx_compare.py
+```
 
 ---
 
