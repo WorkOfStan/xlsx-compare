@@ -78,6 +78,66 @@ def summary_rows(workbook):
 
 
 @pytest.mark.parametrize(
+    "comparison",
+    [
+        pytest.param(
+            (
+                {"Sheet": {"A1": "left"}},
+                {"Other": {}},
+                [f"{app.Colors.YELLOW}[ONLY]{app.Colors.RESET} ... only in file1"],
+            ),
+            id="only-left",
+        ),
+        pytest.param(
+            (
+                {"Other": {}},
+                {"Sheet": {"A1": "right"}},
+                [f"{app.Colors.YELLOW}[ONLY]{app.Colors.RESET} ... only in file2"],
+            ),
+            id="only-right",
+        ),
+        pytest.param(
+            (
+                {"Sheet": {"A1": "same"}},
+                {"Sheet": {"A1": "same"}},
+                [
+                    f"{app.Colors.GREEN}[COMPARE]{app.Colors.RESET} Comparing sheet: Sheet",
+                    f"{app.Colors.BLUE}[SAME]{app.Colors.RESET} ... no difference",
+                ],
+            ),
+            id="identical",
+        ),
+        pytest.param(
+            (
+                {"Sheet": {"A1": "old"}},
+                {"Sheet": {"A1": "new"}},
+                [f"{app.Colors.GREEN}[COMPARE]{app.Colors.RESET} Comparing sheet: Sheet"],
+            ),
+            id="different",
+        ),
+    ],
+)
+def test_sheet_status_markers(comparison, tmp_path, monkeypatch, capsys):
+    """Color only applicable markers and reset before the readable message text."""
+    left_sheets, right_sheets, expected_lines = comparison
+    left = make_workbook(tmp_path / "left.xlsx", left_sheets)
+    right = make_workbook(tmp_path / "right.xlsx", right_sheets)
+    output = tmp_path / "report.xlsx"
+
+    assert run_cli(monkeypatch, left, right, output, "--sheets", "Sheet") == 0
+
+    lines = capsys.readouterr().out.splitlines()
+    markers = ("[ONLY]", "[COMPARE]", "[SAME]")
+    assert [line for line in lines if any(marker in line for marker in markers)] == expected_lines
+    assert f"{app.Colors.CYAN}Processing sheet: Sheet{app.Colors.RESET}" in lines
+    if f"{app.Colors.GREEN}[COMPARE]{app.Colors.RESET} Comparing sheet: Sheet" in expected_lines:
+        assert lines.index(expected_lines[0]) < lines.index("Shape of File1 (Sheet): (1, 1)")
+    if left_sheets.get("Sheet") == {"A1": "old"}:
+        assert f"{app.Colors.RED}1 difference found{app.Colors.RESET}" in lines
+        assert f"{app.Colors.RED}... some difference{app.Colors.RESET}" in lines
+
+
+@pytest.mark.parametrize(
     "left_rows, right_rows, expected_rows",
     [
         pytest.param([[1, " text ", None]], [["1", "text", ""]], [[None, None, None]], id="identical"),

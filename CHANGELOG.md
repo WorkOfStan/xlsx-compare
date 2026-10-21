@@ -30,6 +30,8 @@ feat: speed-up processing of large tables
 - Align README descriptions of difference sheets, log colors, and comparison behavior with the implementation and set the documented and package Python minimum to 3.11 (the oldest supported Python version).
 - Speed up cell comparison with vectorized arrays and format only changed values while preserving normalization, difference counts, and report coordinates. It's ~10x faster.
 - Move regression tests into `tests/` and rename `example/` to `examples/` with Git moves; align development dependencies, CI, and contributor and agent instructions with the new layout.
+- Add yellow `[ONLY]`, green `[COMPARE]`, and blue `[SAME]` console markers while keeping their message text in the terminal's default foreground for readability.
+- Update examples to show also `Only in file1`/`Only in file2` situations
 
 ## [0.2.1] - 2026-10-21
 

@@ -182,12 +182,11 @@ The script currently uses these log colors:
 
 - **Cyan**: Processing progress.
 - **Red**: Difference counts and sheets with differences.
+- **Yellow `[ONLY]`**: Sheets only in one file.
+- **Green `[COMPARE]`**: Shared sheets being read and compared.
+- **Blue `[SAME]`**: Shared sheets with no differences.
 
-The following colors are planned and are not implemented:
-
-- **Yellow**: Sheets only in one file. (TODO)
-- **Green**: Sheets being compared. (TODO)
-- **Blue**: Sheets with no differences. (TODO)
+Only the `[ONLY]`, `[COMPARE]`, and `[SAME]` markers are colored; their following message text uses the terminal's default foreground. Marker shades and contrast depend on the terminal theme, so yellow may be faint on a white background while the message remains readable.
 
 ---
 
