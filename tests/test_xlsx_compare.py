@@ -434,8 +434,8 @@ def assert_report_sheet(workbook, inputs, name, summary):
 
 def test_example_report(tmp_path, monkeypatch):
     """Match the bundled example report against independently computed differences."""
-    root = Path(__file__).resolve().parent
-    left, right = root / "example/a.xlsx", root / "example/b.xlsx"
+    root = Path(__file__).resolve().parents[1]
+    left, right = root / "examples/a.xlsx", root / "examples/b.xlsx"
     output = tmp_path / "example-report.xlsx"
     assert run_cli(monkeypatch, left, right, output) == 0
     workbook = load_workbook(output)
