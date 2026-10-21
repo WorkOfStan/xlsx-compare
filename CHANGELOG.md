@@ -21,11 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2026-10-21
 
-feat: add mininterface GUI
+feat: installation from the GitHub package, CLI migrated to mininterface
 
 ### Added
 
-- installation from the Github package
+- installation from the GitHub package
+- Run `test_xlsx_compare.py` with pytest in the Polish the code workflow.
 
 ### Changed
 

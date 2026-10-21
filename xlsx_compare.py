@@ -5,9 +5,9 @@ Compare two Excel files sheet-by-sheet and cell-by-cell and export the differenc
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from mininterface.cli import Positional
 import pandas as pd
 from mininterface import run
+from mininterface.cli import Positional
 from openpyxl import load_workbook
 
 

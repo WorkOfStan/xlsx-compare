@@ -1,15 +1,14 @@
 """Regression tests for positional output parsing and report generation."""
 
+import sys
 from contextlib import ExitStack
 from functools import partial
 from pathlib import Path
-import sys
 
+import pytest
+import xlsx_compare
 from mininterface import Mininterface, run
 from openpyxl import Workbook, load_workbook
-import pytest
-
-import xlsx_compare
 
 
 @pytest.mark.parametrize(
@@ -62,6 +61,7 @@ def test_main_writes_requested_report(tmp_path, monkeypatch, output_name):
     )
 
     with ExitStack() as resources:
+
         def open_input(*args, **kwargs):
             workbook = load_workbook(*args, **kwargs)
             resources.callback(workbook.close)
