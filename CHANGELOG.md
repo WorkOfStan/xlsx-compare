@@ -21,11 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.1] - 2026-10-21
 
-feat: compare formulas
+feat: compare formulas as default
 
 ### Added
 
 - Add a `Difference Sheet` summary column, test dependencies, and regression tests for comparison accuracy and safe report publication.
+- Add a `--cached-values` CLI and GUI option to compare stored formula results and reject missing results before publishing a report.
 
 ### Changed
 
