@@ -177,6 +177,10 @@ The script provides color-coded logs for better readability:
 2. **Hidden Characters in Data**:
    - Automatically strips leading/trailing whitespace.
 
+3. **Sparklines**:
+   - Sparkline formatting (in-cell charts) is ignored because `openpyxl` does not support Sparkline Group extensions.
+   - The warning `Sparkline Group extension is not supported and will be removed` does not prevent cell-value or formula comparison. Input files remain unchanged.
+
 ---
 
 ## Future Enhancements

@@ -30,6 +30,7 @@ feat: compare formulas
 ### Changed
 
 - docs(example): compare cells where a different formula have a different/same result
+- docs: Document ignored Sparkline formatting and clarify that its warning does not modify input files or prevent cell comparison.
 
 ### Fixed
 
