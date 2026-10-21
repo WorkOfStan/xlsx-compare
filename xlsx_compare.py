@@ -69,24 +69,23 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
     df_lft = df_lft.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
     df_rgt = df_rgt.reindex(index=range(max_rows), columns=range(max_cols)).fillna("")
 
+    values_lft = df_lft.to_numpy(dtype=object)
+    values_rgt = df_rgt.to_numpy(dtype=object)
+    changed = values_lft != values_rgt
+
+    # Debugging
+    # Per-cell examples retained for inspecting individual array positions:
+    # print(f"Comparing cell ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
+    # print(f"Difference: ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
+
     # Create a DataFrame to store differences
-    diff = pd.DataFrame(index=range(max_rows), columns=range(max_cols), dtype=object)
+    diff_values = values_lft.copy()
+    diff_values.fill(float("nan"))
+    diff_values[changed] = values_lft[changed] + " -> " + values_rgt[changed]
+    diff = pd.DataFrame(diff_values, index=range(max_rows), columns=range(max_cols), dtype=object)
     # print("diff DataFrame created")
 
-    diff_count = 0
-
-    for i in range(max_rows):
-        for j in range(max_cols):
-            value1 = df_lft.iloc[i, j]
-            value2 = df_rgt.iloc[i, j]
-
-            # Debugging
-            # print(f"Comparing cell ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
-
-            if value1 != value2:
-                # print(f"Difference: ({i}, {j}): '{repr(value1)}' vs. '{repr(value2)}'")
-                diff.iloc[i, j] = f"{value1} -> {value2}"
-                diff_count = diff_count + 1
+    diff_count = int(changed.sum())
     if diff_count > 0:
         print(f"{Colors.RED}{diff_count} difference found{Colors.RESET}")
 

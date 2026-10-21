@@ -21,11 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2] - TBD
 
+feat: speed-up processing of large tables
+
 ### Changed
 
 - Simplify `.gitignore` to cover Python caches, package build output, virtual environments, local credentials, IDE settings, and temporary files used by this project.
 - Move Python formatting guidelines and local check commands from `README.md` to a new `AGENTS.md` and link to them from the contributing section.
 - Align README descriptions of difference sheets, log colors, and comparison behavior with the implementation and set the documented and package Python minimum to 3.11 (the oldest supported Python version).
+- Speed up cell comparison with vectorized arrays and format only changed values while preserving normalization, difference counts, and report coordinates. It's ~10x faster.
 
 ## [0.2.1] - 2026-10-21
 

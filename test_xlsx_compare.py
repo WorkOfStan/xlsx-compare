@@ -77,6 +77,72 @@ def summary_rows(workbook):
     return {row[0]: row[1:] for row in workbook["COMPARISON"].iter_rows(min_row=5, values_only=True)}
 
 
+@pytest.mark.parametrize(
+    "left_rows, right_rows, expected_rows",
+    [
+        pytest.param([[1, " text ", None]], [["1", "text", ""]], [[None, None, None]], id="identical"),
+        pytest.param(
+            [["a", "b"], ["c", "d"]],
+            [["a", "b"], ["c", "new"]],
+            [[None, None], [None, "d -> new"]],
+            id="sparse",
+        ),
+        pytest.param(
+            [["a", "b"], ["c", "=1+1"]],
+            [["A", "B"], ["C", "=2"]],
+            [["a -> A", "b -> B"], ["c -> C", "=1+1 -> =2"]],
+            id="fully-changed",
+        ),
+        pytest.param(
+            [["left"], ["tail"]],
+            [["right", "extra", "third"]],
+            [["left -> right", " -> extra", " -> third"], ["tail -> ", None, None]],
+            id="unequal-dimensions",
+        ),
+        pytest.param([], [], [], id="both-empty"),
+        pytest.param([], [["new"]], [[" -> new"]], id="left-empty"),
+        pytest.param([["old"]], [], [["old -> "]], id="right-empty"),
+        pytest.param(
+            [[None, float("nan"), pd.NA, False, 0, 3.5, " NA ", "NULL", "N/A", " =1+1 "]],
+            [["", "", "", "False", "0", "3.5", "", None, "N/A", "=2"]],
+            [[None, None, None, None, None, None, "NA -> ", "NULL -> ", None, "=1+1 -> =2"]],
+            id="mixed-values",
+        ),
+    ],
+)
+def test_vectorized_comparison_preserves_cells_and_counts(left_rows, right_rows, expected_rows, capsys):
+    """Keep normalized values, coordinates, inputs, and console counts unchanged."""
+    left = pd.DataFrame(left_rows, dtype=object)
+    right = pd.DataFrame(right_rows, dtype=object)
+    originals = (left.copy(deep=True), right.copy(deep=True))
+    expected = pd.DataFrame(
+        [[float("nan") if value is None else value for value in row] for row in expected_rows], dtype=object
+    )
+
+    actual = app.compare_dataframes_cell_by_cell(left, right, "Sheet")
+
+    pd.testing.assert_frame_equal(actual, expected)
+    pd.testing.assert_frame_equal(left, originals[0])
+    pd.testing.assert_frame_equal(right, originals[1])
+    expected_log = (
+        f"Shape of File1 (Sheet): {left.shape}\n"
+        f"Shape of File2 (Sheet): {right.shape}\n"
+        f"Size rows: {expected.shape[0]} cols: {expected.shape[1]}\n"
+    )
+    count = sum(value is not None for row in expected_rows for value in row)
+    if count:
+        expected_log += f"{app.Colors.RED}{count} difference found{app.Colors.RESET}\n"
+    assert capsys.readouterr().out == expected_log
+
+
+@pytest.mark.parametrize("shape", [(0, 3), (2, 0)])
+def test_vectorized_comparison_preserves_empty_axes(shape):
+    """Preserve explicit empty row or column dimensions and object dtypes."""
+    left = pd.DataFrame(index=range(shape[0]), columns=range(shape[1]), dtype=object)
+    actual = app.compare_dataframes_cell_by_cell(left, pd.DataFrame(), "Empty")
+    pd.testing.assert_frame_equal(actual, left)
+
+
 @pytest.mark.parametrize("literal", ["NA", "NULL", "N/A"])
 def test_literal_missing_value_strings(tmp_path, monkeypatch, literal):
     """Distinguish literal missing-value strings from empty cells."""
