@@ -19,6 +19,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Security` in case of vulnerabilities
 
+## [0.2.0] - 2026-10-21
+
+feat: installation from the GitHub package, CLI migrated to mininterface
+
+### Added
+
+- installation from the GitHub package
+- Run `test_xlsx_compare.py` with pytest in the Polish the code workflow.
+
+### Changed
+
+- CLI migrated to mininterface
+- Limit mininterface to version 1.2.2 or earlier for Windows compatibility.
+- Allow `--sheets` to accept a space-separated list of sheet names to compare (default: all shared and unique sheets).
+
+### Fixed
+
+- Restore the optional third positional argument for the output file, defaulting to `comparison_output.xlsx`.
+- Correct README sheet-selection syntax for the CLI and document GUI list input.
+- ci: Explicitly package only `xlsx_compare` so the top-level test module does not prevent installation in CI.
+- ci: Install `mininterface[basic]` so fresh installations include the CLI parser dependencies required by the application and tests.
+- ci: Create `.tmp` before running pytest in the Polish the code workflow so temporary fixtures work in fresh checkouts.
+
 ## [0.1.1] - 2025-06-10
 
 feat: Comma-separated list of sheet names to compare
@@ -49,6 +72,7 @@ feat: Comma-separated list of sheet names to compare
 
 `XLSX Compare` is a Python script that compares two Excel files, sheet by sheet, and identifies differences. This tool is particularly useful for quickly comparing large Excel files and generating an organized output of the differences. CLI output includes a count of differences in red, making it easy to identify and manage the differences.
 
-[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/WorkOfStan/xlsx-compare/releases/tag/v0.1.0
