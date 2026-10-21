@@ -37,6 +37,7 @@ feat: installation from the GitHub package, CLI migrated to mininterface
 
 - Restore the optional third positional argument for the output file, defaulting to `comparison_output.xlsx`.
 - Correct README sheet-selection syntax for the CLI and document GUI list input.
+- Explicitly package only `xlsx_compare` so the top-level test module does not prevent installation in CI.
 
 ## [0.1.1] - 2025-06-10
 

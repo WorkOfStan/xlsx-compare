@@ -10,3 +10,6 @@ license = { text = "MIT" }
 
 [project.scripts]
 xlsx_compare = "xlsx_compare:main"
+
+[tool.setuptools]
+py-modules = ["xlsx_compare"]
