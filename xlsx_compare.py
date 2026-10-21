@@ -17,6 +17,8 @@ from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Border, Font, Side
 from openpyxl.utils.exceptions import IllegalCharacterError, InvalidFileException
 
+SUMMARY_SHEET_NAME = "COMPARISON"
+
 
 @dataclass
 class Env:
@@ -186,21 +188,31 @@ def open_workbook(path, data_only=False):
             workbook.close()
 
 
+def print_status_marker(marker, color, message):
+    """Reset a status marker's color before printing its readable message text."""
+    print(f"{color}[{marker}]{Colors.RESET} {message}")
+
+
+def unique_sheet_summary(sheet, file_number):
+    """Use one status description for a one-sided sheet's log and summary row."""
+    status = f"Only in file{file_number}"
+    print_status_marker("ONLY", Colors.YELLOW, f"... {status.lower()}")
+    return [sheet, status, ""]
+
+
 def compare_sheet(sheet, workbooks, output_writer):
     """Write differences for one sheet and return its summary row."""
     wb1, wb2 = workbooks
     print(f"{Colors.CYAN}Processing sheet: {sheet}{Colors.RESET}")  # Cyan for processing progress
     if sheet not in wb1.sheetnames:
         # Sheet only in file2
-        print(f"{Colors.YELLOW}[ONLY]{Colors.RESET} ... only in file2")
-        return [sheet, "Only in file2", ""]
+        return unique_sheet_summary(sheet, 2)
     if sheet not in wb2.sheetnames:
         # Sheet only in file1
-        print(f"{Colors.YELLOW}[ONLY]{Colors.RESET} ... only in file1")
-        return [sheet, "Only in file1", ""]
+        return unique_sheet_summary(sheet, 1)
 
     # Sheet in both files
-    print(f"{Colors.GREEN}[COMPARE]{Colors.RESET} Comparing sheet: {sheet}")
+    print_status_marker("COMPARE", Colors.GREEN, f"Comparing sheet: {sheet}")
     # dtype=str : all data is treated as strings and any non-standard formats are handled
     # header=None : the first row is also compared
     df1 = read_sheet(wb1[sheet])
@@ -214,7 +226,7 @@ def compare_sheet(sheet, workbooks, output_writer):
     # Compare content cell by cell
     differences = compare_dataframes_cell_by_cell(df1, df2, sheet)
     if differences.isnull().all().all():
-        print(f"{Colors.BLUE}[SAME]{Colors.RESET} ... no difference")
+        print_status_marker("SAME", Colors.BLUE, "... no difference")
         return [sheet, "No differences", ""]
     print(f"{Colors.RED}... some difference{Colors.RESET}")
     # Save differences to a separate sheet
@@ -225,7 +237,7 @@ def compare_sheet(sheet, workbooks, output_writer):
 def write_report(args, workbooks, selected_sheets, output_writer):
     """Populate difference sheets and the formatted comparison summary."""
     # Keep a visible sheet so writer cleanup cannot mask a comparison error.
-    output_writer.book.create_sheet("COMPARISON")
+    output_writer.book.create_sheet(SUMMARY_SHEET_NAME)
     print("... Excel writer prepared")  # to show processing progress
 
     # Create a summary list for the COMPARISON sheet
@@ -247,8 +259,8 @@ def write_report(args, workbooks, selected_sheets, output_writer):
             "Difference Sheet",
         ],  # Header row for the comparison summary
     )
-    del output_writer.book["COMPARISON"]
-    write_text_dataframe(output_writer, "COMPARISON", comparison_df)
+    del output_writer.book[SUMMARY_SHEET_NAME]
+    write_text_dataframe(output_writer, SUMMARY_SHEET_NAME, comparison_df)
 
 
 def validate_cached_sheet(path, formulas, cached):
