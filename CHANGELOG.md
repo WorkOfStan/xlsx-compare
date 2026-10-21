@@ -40,6 +40,8 @@ feat: compare formulas
 - Keep bold, centered, thin-bordered COMPARISON headers.
 - Preserve the mininterface CLI and combine its regression tests with formula comparison and file-safety coverage.
 - Align Black and isort with Ruff's 120-character line length to prevent conflicting CI formatting changes.
+- Set Pylint's maximum line length to 120 characters to match Black, isort, and Ruff.
+- Preserve Super-Linter v9.0.0's Pylint defaults for parallel jobs and unavailable dependency imports.
 
 ### Security
 

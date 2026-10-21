@@ -1,0 +1,15 @@
+[MASTER]
+
+# Preserve the defaults from Super-Linter v9.0.0/TEMPLATES/.python-lint.
+# Use multiple processes to speed up Pylint.
+jobs=0
+
+[MESSAGES CONTROL]
+
+# Ignoring Import Errors is desired as super-linter
+# does not support installing dependencies as it runs
+disable=import-error
+
+[FORMAT]
+# Match Black, isort, and Ruff so linting accepts the formatter output.
+max-line-length = 120
