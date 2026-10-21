@@ -29,7 +29,7 @@ class Env:
     output: Positional[Path] = Path("comparison_output.xlsx")
     """Output Excel file path"""
 
-    sheets: list[str] = field(default_factory=lambda: [])
+    sheets: list[str] = field(default_factory=list)
     "Sheet names to compare (default: all sheets)"
 
 
@@ -269,9 +269,8 @@ def run_comparison(args, resources):
     with NamedTemporaryFile(dir=output.parent, prefix=".xlsx-compare-", suffix=".xlsx", delete=False) as temporary_file:
         temporary_path = Path(temporary_file.name)
     resources.callback(remove_temporary_file, temporary_path)
-    with temporary_path.open("w+b") as output_stream:
-        with pd.ExcelWriter(output_stream, engine="openpyxl") as output_writer:
-            write_report(args, (wb1, wb2), selected_sheets, output_writer)
+    with temporary_path.open("w+b") as output_stream, pd.ExcelWriter(output_stream, engine="openpyxl") as output_writer:
+        write_report(args, (wb1, wb2), selected_sheets, output_writer)
 
     # Save the output file
     os.replace(temporary_path, output)

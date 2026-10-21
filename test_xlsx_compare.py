@@ -194,7 +194,14 @@ def test_output_cannot_replace_input(tmp_path, monkeypatch, target):
 
 @pytest.mark.parametrize(
     "selection",
-    [("",), ("   ",), ("Sheet", ""), ("Missing",), ("Sheet", "Missing"), ("Sheet,Missing",)],
+    [
+        ("",),
+        ("   ",),
+        ("Sheet", ""),
+        ("Missing",),
+        ("Sheet", "Missing"),
+        ("Sheet,Missing",),
+    ],
 )
 def test_invalid_sheet_selections_preserve_output(tmp_path, monkeypatch, selection):
     """Reject invalid selections without replacing an existing report."""
