@@ -8,10 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### `Added` for new features
-- installation from the Github package
 
 ### `Changed` for changes in existing functionality
-- CLI migrated to mininterface
 
 ### `Deprecated` for soon-to-be removed features
 
@@ -20,6 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### `Fixed` for any bugfixes
 
 ### `Security` in case of vulnerabilities
+
+## [0.2.0] - 2026-10-21
+
+feat: add mininterface GUI
+
+### Added
+
+- installation from the Github package
+
+### Changed
+
+- CLI migrated to mininterface
+- Limit mininterface to version 1.2.2 or earlier for Windows compatibility.
+
+### Fixed
+
+- Restore the optional third positional argument for the output file, defaulting to `comparison_output.xlsx`.
+- Correct README sheet-selection syntax for the CLI and document GUI list input.
 
 ## [0.1.1] - 2025-06-10
 

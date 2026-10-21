@@ -19,7 +19,7 @@ class Env:
     """First Excel file path"""
     file2: Positional[Path]
     """Second Excel file path"""
-    output: Path = Path("comparison_output.xlsx")
+    output: Positional[Path] = Path("comparison_output.xlsx")
     """Output Excel file path"""
 
     sheets: list[str] = field(default_factory=lambda: [])

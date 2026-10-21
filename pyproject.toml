@@ -2,8 +2,8 @@
 name = "xlsx_compare"
 version = "0.2.0"
 description = ""
-authors = [{ name = "Stanislav Rejthar", email = "anonymous@example.com" }]
-dependencies = ["pandas", "openpyxl", "mininterface"]
+authors = [{ name = "Stanislav Rejthar", email = "rejthar@stanislavrejthar.com" }]
+dependencies = ["pandas", "openpyxl", "mininterface<=1.2.2"]
 requires-python = ">=3.7"
 readme = "README.md"
 license = { text = "MIT" }
