@@ -39,6 +39,7 @@ feat: compare formulas
 - Close workbook and writer resources on failure and replace reports only after a successful temporary-file save.
 - Keep bold, centered, thin-bordered COMPARISON headers.
 - Preserve the mininterface CLI and combine its regression tests with formula comparison and file-safety coverage.
+- Align Black and isort with Ruff's 120-character line length to prevent conflicting CI formatting changes.
 
 ### Security
 

@@ -211,6 +211,20 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
+### Python formatting
+
+Use a 120-character line length for Python. Super-Linter loads Black and isort settings from
+`.github/linters/.python-black` and `.github/linters/.isort.cfg`; these match its Ruff configuration.
+This keeps Black's automatic fixes consistent with Ruff's formatting check.
+
+To run the same checks locally after installing `black`, `isort`, and `ruff`:
+
+```bash
+python -m black --check --config .github/linters/.python-black xlsx_compare.py test_xlsx_compare.py
+python -m isort --check-only --settings-path .github/linters/.isort.cfg xlsx_compare.py test_xlsx_compare.py
+python -m ruff format --check --line-length 120 xlsx_compare.py test_xlsx_compare.py
+```
+
 ---
 
 ## License

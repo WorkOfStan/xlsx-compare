@@ -1,0 +1,3 @@
+[tool.black]
+# Match Super-Linter's Ruff configuration to avoid competing line wraps.
+line-length = 120
