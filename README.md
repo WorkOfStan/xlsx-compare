@@ -13,7 +13,7 @@
 
 2. **Handles Differences**:
 
-   - Highlights cell-by-cell differences for sheets present in both files.
+   - Records cell-by-cell differences as plain text (`old -> new`) without cell highlighting.
    - Writes differences into a separate sheet named `df-<sheet_name>`.
    - Truncates long report sheet names and adds numbered suffixes when names collide; the summary's `Difference Sheet` column identifies each report sheet.
    - CLI output contains difference count (in red).
@@ -33,7 +33,6 @@
 5. **Performance Optimization**:
 
    - Uses `read_only=True` mode with `openpyxl` for processing large files efficiently.
-   - Handles different sheet sizes by padding smaller sheets to match dimensions.
 
 6. **User-Friendly CLI**:
 
@@ -48,7 +47,7 @@
 
 ## Installation
 
-- Python 3.7 or later.
+- Python 3.11 or later.
 - Install the package:
 
 ```bash
@@ -121,6 +120,7 @@ Sheet selections must not contain empty names or names missing from both inputs.
 - If a formula on a selected sheet shared by both inputs has no cached result, report its file, sheet, and cell and exit with status `1` before creating a report. An existing report remains unchanged. Zero, `False`, and cached empty text are valid results. Missing results on unselected or one-sided sheets do not block comparison.
 - Preserve literal text such as `NA`, `NULL`, and `N/A`; these are distinct from blank cells.
 - Ignore leading and trailing whitespace consistently. Treat missing cells as empty strings and normalize cell values to strings.
+- Handle different sheet sizes by padding both DataFrames with empty values to the maximum row and column counts across the two sheets.
 - Compare values at their original coordinates, including the first row. Formatting changes are outside the comparison.
 - Write report values as literal text, including values beginning with `=`, so Excel does not execute them as formulas.
 
@@ -150,9 +150,9 @@ xlsx_compare example/a.xlsx example/b.xlsx example/comparison-cached-values.xlsx
 
 ### Sheet with Differences (e.g., `df-Sheet4`)
 
-| **Cell A1**        | **Cell A2** |
-| ------------------ | ----------- |
-| `Value1 -> Value2` | `...`       |
+If cell `A1` changes from `Value1` to `Value2`, cell `A1` in `df-Sheet4` contains the literal text `Value1 -> Value2`.
+
+Difference sheets preserve the original cell coordinates, add no header row or index column, and leave unchanged cells blank. Changed cells use plain text without cell highlighting.
 
 ---
 
@@ -162,35 +162,30 @@ xlsx_compare example/a.xlsx example/b.xlsx example/comparison-cached-values.xlsx
   - The script reads worksheet rows directly, so the first row is compared at its original coordinates.
 - **Performance**:
   - The script uses `read_only=True` for large files to reduce memory usage.
-- **Shapes Mismatch**:
-  - Pads the smaller DataFrame with empty values to match the dimensions of the larger DataFrame.
 
 ---
 
 ## Color-Coded Logs
 
-The script provides color-coded logs for better readability:
+The script currently uses these log colors:
 
 - **Cyan**: Processing progress.
+- **Red**: Difference counts and sheets with differences.
+
+The following colors are planned and are not implemented:
+
 - **Yellow**: Sheets only in one file. (TODO)
 - **Green**: Sheets being compared. (TODO)
 - **Blue**: Sheets with no differences. (TODO)
-- **Red**: Sheets with differences.
 
 ---
 
-## Known Issues
+## Known Limitations
 
-1. **DataFrames with Different Shapes**:
+**Sparklines**:
 
-   - Handled by padding smaller DataFrames with empty values.
-
-2. **Hidden Characters in Data**:
-   - Automatically strips leading/trailing whitespace.
-
-3. **Sparklines**:
-   - Sparkline formatting (in-cell charts) is ignored because `openpyxl` does not support Sparkline Group extensions.
-   - The warning `Sparkline Group extension is not supported and will be removed` does not prevent cell-value or formula comparison. Input files remain unchanged.
+- Sparkline formatting (in-cell charts) is ignored because `openpyxl` does not support Sparkline Group extensions.
+- The warning `Sparkline Group extension is not supported and will be removed` does not prevent cell-value or formula comparison. Input files remain unchanged.
 
 ---
 
@@ -226,32 +221,8 @@ def compare_dataframes_cell_by_cell(df_lft, df_rgt, sheet_handle: str) -> pd.Dat
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-### Python formatting
-
-GitHub Action calling Super-linter is taking care of formatting. Description below is just to explain what's going on.
-
-Use a 120-character line length for Python. Super-Linter loads Black, isort, and Pylint settings from
-`.github/linters/.python-black`, `.github/linters/.isort.cfg`, and `.github/linters/.python-lint`;
-these match its Ruff configuration. This keeps formatting and lint checks consistent.
-Custom configuration files replace Super-Linter's defaults. The Pylint configuration preserves
-Super-Linter v9.0.0's `jobs=0` and `disable=import-error` settings and adds the 120-character limit.
-Compare these defaults when upgrading Super-Linter.
-
-To run the same checks locally after installing `black`, `isort`, `pylint`, and `ruff`:
-
-```bash
-python -m black --check --config .github/linters/.python-black xlsx_compare.py test_xlsx_compare.py
-python -m isort --check-only --settings-path .github/linters/.isort.cfg xlsx_compare.py test_xlsx_compare.py
-python -m ruff format --check --line-length 120 xlsx_compare.py test_xlsx_compare.py
-python -m pylint --persistent=n --rcfile .github/linters/.python-lint xlsx_compare.py test_xlsx_compare.py
-```
-
 ---
 
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
-
----
-
-Let me know if you'd like any further customization! 😊
