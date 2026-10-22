@@ -165,6 +165,8 @@ python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
 
 See [AGENTS.md](AGENTS.md) for repository change requirements and detailed formatting and lint commands.
 
+GitHub Actions runs pytest across Python 3.11–3.15 as required checks and Python 3.16 as an experimental check with prerelease support. Python 3.16 failures, including unavailable interpreters or dependencies, are advisory. The workflow runs pytest first, then Prettier, then Super-Linter; failures on required Python versions stop the later stages.
+
 ---
 
 ## Debugging

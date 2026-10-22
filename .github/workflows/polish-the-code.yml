@@ -22,7 +22,53 @@ permissions:
   contents: read
 
 jobs:
+  pytest:
+    name: Pytest / Python ${{ matrix.python-version }}${{ matrix.experimental && ' (experimental)' || '' }}
+    runs-on: "ubuntu-latest"
+    timeout-minutes: 10
+    # Development-version failures remain visible without blocking the required versions.
+    continue-on-error: ${{ matrix.experimental }}
+    strategy:
+      # Preserve fail-fast behavior for required versions; experimental failures do not cancel them.
+      fail-fast: true
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        experimental: [false]
+        include:
+          - python-version: "3.16"
+            experimental: true
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: ${{ matrix.experimental }}
+          cache: pip
+          cache-dependency-path: |
+            pyproject.toml
+            requirements-dev.txt
+
+      - name: Show Python version
+        run: python --version
+
+      - name: Install package and test dependencies
+        # Use the same development dependency constraints as local contributors.
+        run: python -m pip install . -r requirements-dev.txt
+
+      - name: Run regression tests
+        run: |
+          # Pytest creates its base temp directory, but requires the parent to exist.
+          mkdir -p .tmp
+          python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
+
   prettier-fix:
+    # Format code only after the test job succeeds.
+    needs: pytest
     # Note: runs-on doesn't accept all expressions, so a string is used
     runs-on: "ubuntu-latest"
     permissions:
@@ -35,32 +81,9 @@ jobs:
         with:
           commit-changes: ${{ github.event_name != 'schedule' }}
 
-  pytest:
-    runs-on: "ubuntu-latest"
-    timeout-minutes: 10
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Install package and test dependencies
-        # Use the same development dependency constraints as local contributors.
-        run: python -m pip install . -r requirements-dev.txt
-
-      - name: Run regression tests
-        run: |
-          # Pytest creates its base temp directory, but requires the parent to exist.
-          mkdir -p .tmp
-          python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
-
   super-linter:
-    needs: [prettier-fix, pytest]
+    # The dependency chain enforces pytest -> prettier-fix -> super-linter.
+    needs: prettier-fix
     uses: WorkOfStan/seablast-actions/.github/workflows/linter.yml@v0.2.12
     permissions:
       contents: read
