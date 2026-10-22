@@ -4,15 +4,18 @@
 
 - Keep the application in the root-level `xlsx_compare.py` module.
 - Keep regression tests in `tests/` and sample inputs and reports in `examples/`.
-- Declare runtime dependencies in `pyproject.toml` and development tools in `requirements-dev.txt`.
+- Declare runtime dependencies in `[project].dependencies` and development tools in `[dependency-groups]`
+  in `pyproject.toml`. Keep test tools in `test`, optional lint tools in `lint`, and combine both in `dev`.
 - Use `git mv` for file and directory moves, and update affected code, documentation, and CI paths.
 
 ## Setup and tests
 
-Use Python 3.11 or later and an activated virtual environment. Run commands from the repository root:
+Use Python 3.11 or later, pip 25.1 or later, and an activated virtual environment.
+Run commands from the repository root:
 
 ```bash
-python -m pip install -e . -r requirements-dev.txt
+python -m pip install --upgrade "pip>=25.1"
+python -m pip install -e . --group test
 python -c "from pathlib import Path; Path('.tmp').mkdir(exist_ok=True)"
 python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
 ```
@@ -46,7 +49,9 @@ Custom configuration files replace Super-Linter's defaults. The Pylint configura
 Super-Linter v9.0.0's `jobs=0` and `disable=import-error` settings and adds the 120-character limit.
 Compare these defaults when upgrading Super-Linter.
 
-The development requirements install `black`, `isort`, `pylint`, and `ruff`. Run the same checks locally with:
+Local formatting and lint tools are optional. Install `black`, `isort`, `pylint`, and `ruff` with
+`python -m pip install --group lint`, or install the application and both development groups with
+`python -m pip install -e . --group dev`. Run the same checks locally with:
 
 ```bash
 python -m black --check --config .github/linters/.python-black xlsx_compare.py tests

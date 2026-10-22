@@ -37,6 +37,7 @@ feat: speed-up processing of large tables
 - Add yellow `[ONLY]`, green `[COMPARE]`, and blue `[SAME]` console markers while keeping their message text in the terminal's default foreground for readability.
 - Update examples to show also `Only in file1`/`Only in file2` situations
 - Consolidate status-marker formatting, summaries for sheets present in one input, and the summary sheet name while preserving the existing vectorized table-processing path and report output. (I kept the vectorized comparison function unchanged: extracting its preparation logic slowed full-workbook runs, so that small duplication remains intentional.)
+- Move development dependencies into PEP 735 test, lint, and dev groups in `pyproject.toml`, remove `requirements-dev.txt`, and update CI and contributor instructions to use pip 25.1 or later and install lint tools only when requested.
 
 ## [0.2.1] - 2026-10-21
 

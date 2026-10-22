@@ -155,13 +155,22 @@ Difference sheets preserve the original cell coordinates, add no header row or i
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Use an activated virtual environment with Python 3.11 or later. From the repository root, install the project in editable mode and its development tools, then run the regression tests:
+Use an activated virtual environment with Python 3.11 or later and pip 25.1 or later. From the repository root, install the project in editable mode and its test dependencies, then run the regression tests:
 
 ```bash
-python -m pip install -e . -r requirements-dev.txt
+python -m pip install --upgrade "pip>=25.1"
+python -m pip install -e . --group test
 python -c "from pathlib import Path; Path('.tmp').mkdir(exist_ok=True)"
 python -m pytest -q -p no:cacheprovider --basetemp=.tmp/pytest tests
 ```
+
+Development dependencies are defined in `pyproject.toml` using PEP 735 dependency groups. The `test` group installs pytest; formatting and lint tools are optional and handled by GitHub Actions. To run those checks locally, install the `lint` group:
+
+```bash
+python -m pip install --group lint
+```
+
+Alternatively, install the application with all development tools using `python -m pip install -e . --group dev`. These groups are installed only when explicitly requested with `--group`.
 
 See [AGENTS.md](AGENTS.md) for repository change requirements and detailed formatting and lint commands.
 
