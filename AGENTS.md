@@ -21,6 +21,10 @@ Do not load pytest's cache plugin. Keep test and temporary output under `.tmp/`.
 Do not inspect, lint, or recurse into `.tmp`, `.pytest-tmp`, `.pytest_cache`, `.venv`, or generated build artifacts.
 If pytest temporary-directory cleanup fails on Windows, remove only `.tmp/pytest` and rerun tests serially.
 
+CI tests Python 3.11–3.15 as required versions and Python 3.16 as an experimental version with prerelease support.
+Keep only the Python 3.16 job advisory. Preserve required-version fail-fast behavior and the dependency chain
+`pytest` -> `prettier-fix` -> `super-linter` in `.github/workflows/polish-the-code.yml`.
+
 ## Change requirements
 
 - Preserve source comments unless removing a TODO resolved by the change; comments may be translated to English.

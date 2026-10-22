@@ -19,9 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### `Security` in case of vulnerabilities
 
-## [0.2.2] - TBD
+## [0.2.2] - 2026-10-22
 
 feat: speed-up processing of large tables
+
+### Added
+
+- ci: Add a Python 3.11–3.16 pytest matrix with advisory prerelease testing on 3.16 and pip caching; run Prettier only after pytest succeeds and Super-Linter only after Prettier succeeds.
 
 ### Changed
 
@@ -117,7 +121,8 @@ feat: Comma-separated list of sheet names to compare
 
 `XLSX Compare` is a Python script that compares two Excel files, sheet by sheet, and identifies differences. This tool is particularly useful for quickly comparing large Excel files and generating an organized output of the differences. CLI output includes a count of differences in red, making it easy to identify and manage the differences.
 
-[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/WorkOfStan/xlsx-compare/compare/v0.1.0...v0.1.1
