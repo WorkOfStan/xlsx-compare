@@ -1,5 +1,0 @@
-black
-isort
-pylint
-pytest>=7,<10
-ruff

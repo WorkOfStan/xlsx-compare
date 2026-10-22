@@ -1,6 +1,6 @@
 [project]
 name = "xlsx_compare"
-version = "0.2.0"
+version = "0.2.2"
 description = ""
 authors = [{ name = "Stanislav Rejthar", email = "rejthar@stanislavrejthar.com" }]
 dependencies = ["pandas", "openpyxl", "mininterface[basic]<=1.2.2"]
@@ -10,6 +10,11 @@ license = { text = "MIT" }
 
 [project.scripts]
 xlsx_compare = "xlsx_compare:main"
+
+[dependency-groups]
+test = ["pytest>=7,<10"]
+lint = ["black", "isort", "pylint", "ruff"]
+dev = [{include-group = "test"}, {include-group = "lint"}]
 
 [tool.setuptools]
 py-modules = ["xlsx_compare"]
